@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Upload Subject Details</title>
+  <style>
+    body{font-family:Segoe UI,Arial,sans-serif;background:#f4f6f8;margin:0;padding:20px}
+    .card{max-width:1000px;margin:24px auto;padding:20px;background:white;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+    h1{color:#333;margin-bottom:12px}
+    .note{font-size:0.9rem;color:#666;margin-top:8px}
+    .classGroup{border:1px solid #ddd;border-radius:6px;padding:16px;margin-bottom:16px;background:#f9f9f9}
+    .classGroup h3{margin:0 0 12px;color:#333;border-bottom:2px solid #667eea;padding-bottom:8px}
+    .subjectForm{background:white;border-left:4px solid #667eea;padding:12px;margin-bottom:12px;border-radius:4px}
+    .subjectForm h4{margin:0 0 8px;color:#333}
+    label{display:block;margin:10px 0 6px;color:#333;font-weight:600;font-size:0.95rem}
+    input,textarea{width:100%;padding:8px;border:1px solid #ddd;border-radius:6px;box-sizing:border-box;font-family:inherit}
+    .row{display:flex;gap:12px;margin-bottom:8px}
+    .half{flex:1}
+    button{margin-top:8px;padding:8px 12px;border:0;border-radius:6px;background:#667eea;color:#fff;font-weight:600;cursor:pointer;font-size:0.95rem}
+    button:hover{background:#5568d3}
+    .danger{background:#e74c3c}
+    .danger:hover{background:#c0392b}
+    .success{background:#27ae60}
+    .success:hover{background:#229954}
+    .submit-section{margin-top:24px;padding-top:16px;border-top:2px solid #ddd}
+    .file-info{font-size:0.85rem;color:#666;margin-top:4px}
+    .existing-file{background:#e8f4f8;padding:8px;border-radius:4px;margin:8px 0;font-size:0.9rem}
+    .existing-file a{color:#667eea;text-decoration:none}
+    .existing-file a:hover{text-decoration:underline}
+    .error{color:#e74c3c;font-size:0.9rem;margin-top:4px}
+    .success-msg{color:#27ae60;font-size:0.9rem;margin-top:4px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Upload Subject Details</h1>
+    <p class="note">Upload syllabus, weightage, and classroom link for each subject you teach. This data will be visible to the admin.</p>
+    
+    <div id="subjectsContainer"></div>
+    
+    <div class="submit-section">
+      <button id="submitAllBtn" style="background:#27ae60;width:100%;padding:12px">
+        ✓ Mark All as Complete
+      </button>
+      <p class="note" style="margin-top:12px">After you mark as complete, you can close this page. Your data is saved locally.</p>
+      <p class="note"><a href="teacher.html" style="color:#667eea">← Back to Teacher Form</a></p>
+    </div>
+  </div>
+
+  <script>
+    const SUBMISSION_KEY = 'teacher_submission_temp';
+    const SYLLABI_KEY = 'teacher_syllabi';
+
+    function safeGetJSON(key, defaultVal) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw === null || raw === undefined) return defaultVal;
+        return JSON.parse(raw);
+      } catch (err) {
+        console.error('safeGetJSON parse error for', key, err);
+        return defaultVal;
+      }
+    }
+
+    function safeSetJSON(key, val) {
+      try {
+        localStorage.setItem(key, JSON.stringify(val));
+      } catch (err) {
+        console.error('safeSetJSON error for', key, err);
+      }
+    }
+
+    function getStorageKey(curriculum, subject) {
+      return 'syllabus_' + encodeURIComponent(curriculum) + '_' + encodeURIComponent(subject);
+    }
+
+    function renderSubjects() {
+      const teachers = safeGetJSON('teachers_data', []);
+      const assignments = safeGetJSON('coord_assignments', []);
+      const container = document.getElementById('subjectsContainer');
+      
+      if (teachers.length === 0) {
+        container.innerHTML = '<p class="error">No teacher submissions found.</p>';
+        return;
+      }
+
+      // For demo, use the last submitted teacher
+      const teacher = teachers[teachers.length - 1];
+      const teacherId = teacher.email || teacher.name;
+      const teacherAssignments = assignments.filter(a => a.facultyId === teacherId);
+
+      if (teacherAssignments.length === 0) {
+        container.innerHTML = '<p class="note">No subjects assigned yet for ' + teacher.name + '. Please wait for the coordinator to assign subjects based on your preferences.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+
+      // Group by curriculum key
+      const grouped = {};
+      teacherAssignments.forEach(assignment => {
+        const [curriculumKey, subject] = assignment.subjectKey.split('::');
+        if (!grouped[curriculumKey]) {
+          grouped[curriculumKey] = [];
+        }
+        grouped[curriculumKey].push(subject);
+      });
+
+      Object.keys(grouped).forEach(curriculumKey => {
+        const classGroup = document.createElement('div');
+        classGroup.className = 'classGroup';
+        
+        const [semester, section, year, ...specParts] = curriculumKey.split('_');
+        const specialization = specParts.join('_') || '';
+        const classType = section.startsWith('MCA') ? 'PG' : 'UG';
+        const classLabel = `${classType} ${section} - Sem ${semester}, Year ${year.slice(1)}${specialization ? ' (' + specialization.replace(/_/g, ' ') + ')' : ''}`;
+        const classTitle = document.createElement('h3');
+        classTitle.textContent = classLabel;
+        classGroup.appendChild(classTitle);
+
+        // Render form for each subject
+        grouped[curriculumKey].forEach((subject, subjIdx) => {
+          const storageKey = getStorageKey(curriculumKey, subject);
+          const existing = safeGetJSON(storageKey, null);
+
+          const form = document.createElement('div');
+          form.className = 'subjectForm';
+          form.id = `form_${curriculumKey}_${subjIdx}`;
+
+          const subjTitle = document.createElement('h4');
+          subjTitle.textContent = '📚 ' + subject;
+          form.appendChild(subjTitle);
+
+          // Curriculum info
+          const currInfo = document.createElement('div');
+          currInfo.style.fontSize = '0.85rem';
+          currInfo.style.color = '#666';
+          currInfo.style.marginBottom = '8px';
+          currInfo.textContent = 'Curriculum Key: ' + curriculumKey;
+          form.appendChild(currInfo);
+
+          // Show existing file if available
+          if (existing && existing.name) {
+            const existingDiv = document.createElement('div');
+            existingDiv.className = 'existing-file';
+            existingDiv.innerHTML = `<strong>Current File:</strong> <a href="#" onclick="downloadFile('${storageKey}'); return false;">${existing.name}</a>`;
+            form.appendChild(existingDiv);
+          }
+
+          // File input
+          const fileLabel = document.createElement('label');
+          fileLabel.textContent = 'Choose Syllabus (PDF or CSV)';
+          form.appendChild(fileLabel);
+
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          fileInput.accept = '.pdf,.csv';
+          fileInput.className = `fileInput_${curriculumKey}_${subjIdx}`;
+          form.appendChild(fileInput);
+
+          const fileInfo = document.createElement('div');
+          fileInfo.className = 'file-info';
+          fileInfo.textContent = 'Optional - Only choose a file if you want to update';
+          form.appendChild(fileInfo);
+
+          // Weightage
+          const weightLabel = document.createElement('label');
+          weightLabel.textContent = 'Weightage (%)';
+          form.appendChild(weightLabel);
+
+          const weightInput = document.createElement('input');
+          weightInput.type = 'number';
+          weightInput.min = '0';
+          weightInput.max = '100';
+          weightInput.placeholder = 'e.g., 30';
+          weightInput.className = `weightInput_${curriculumKey}_${subjIdx}`;
+          weightInput.value = existing && existing.weightage ? existing.weightage : '';
+          form.appendChild(weightInput);
+
+          // Classroom Link
+          const linkLabel = document.createElement('label');
+          linkLabel.textContent = 'Google Classroom Link';
+          form.appendChild(linkLabel);
+
+          const linkInput = document.createElement('input');
+          linkInput.type = 'text';
+          linkInput.placeholder = 'https://classroom.google.com/...';
+          linkInput.className = `linkInput_${curriculumKey}_${subjIdx}`;
+          linkInput.value = existing && existing.classroomLink ? existing.classroomLink : '';
+          form.appendChild(linkInput);
+
+          // Save button
+          const saveBtn = document.createElement('button');
+          saveBtn.type = 'button';
+          saveBtn.className = 'success';
+          saveBtn.textContent = '💾 Save Subject Details';
+          saveBtn.onclick = () => saveSubjectDetails(curriculumKey, subjIdx, curriculumKey, subject, storageKey);
+          form.appendChild(saveBtn);
+
+          const statusDiv = document.createElement('div');
+          statusDiv.id = `status_${curriculumKey}_${subjIdx}`;
+          form.appendChild(statusDiv);
+
+          classGroup.appendChild(form);
+        });
+
+        container.appendChild(classGroup);
+      });
+    }
+
+    function saveSubjectDetails(curriculumKey, subjIdx, curriculumKey2, subject, storageKey) {
+      const fileInput = document.querySelector(`.fileInput_${curriculumKey}_${subjIdx}`);
+      const weightInput = document.querySelector(`.weightInput_${curriculumKey}_${subjIdx}`);
+      const linkInput = document.querySelector(`.linkInput_${curriculumKey}_${subjIdx}`);
+      const statusDiv = document.getElementById(`status_${curriculumKey}_${subjIdx}`);
+
+      const file = fileInput.files[0];
+      const weightage = weightInput.value.trim();
+      const classroomLink = linkInput.value.trim();
+
+      statusDiv.innerHTML = '';
+
+      // Validate weightage
+      if (weightage && (isNaN(weightage) || weightage < 0 || weightage > 100)) {
+        statusDiv.innerHTML = '<div class="error">❌ Weightage must be between 0 and 100</div>';
+        return;
+      }
+
+      // Get existing data
+      const existing = safeGetJSON(storageKey, {});
+
+      // If file is provided, read and save it
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          const dataUrl = ev.target.result;
+          const obj = {
+            name: file.name,
+            type: file.type,
+            data: dataUrl,
+            weightage: weightage ? parseInt(weightage, 10) : null,
+            classroomLink: classroomLink || null,
+            subject: subject,
+            curriculumKey: curriculumKey,
+            savedAt: new Date().toISOString()
+          };
+          safeSetJSON(storageKey, obj);
+          addToSyllabiIndex(curriculumKey, subject);
+          statusDiv.innerHTML = '<div class="success-msg">✓ Saved successfully!</div>';
+        };
+        reader.onerror = function() {
+          statusDiv.innerHTML = '<div class="error">❌ Error reading file</div>';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // Just update metadata if file exists
+        if (Object.keys(existing).length > 0) {
+          existing.weightage = weightage ? parseInt(weightage, 10) : null;
+          existing.classroomLink = classroomLink || null;
+          existing.subject = subject;
+          existing.curriculumKey = curriculumKey;
+          existing.savedAt = new Date().toISOString();
+          safeSetJSON(storageKey, existing);
+          addToSyllabiIndex(curriculumKey, subject);
+          statusDiv.innerHTML = '<div class="success-msg">✓ Metadata updated!</div>';
+        } else {
+          statusDiv.innerHTML = '<div class="error">⚠ Please upload a file or load existing upload first</div>';
+        }
+      }
+    }
+
+    function addToSyllabiIndex(curriculum, subject) {
+      const index = safeGetJSON(SYLLABI_KEY, {});
+      if (!index[curriculum]) {
+        index[curriculum] = [];
+      }
+      if (!index[curriculum].includes(subject)) {
+        index[curriculum].push(subject);
+      }
+      safeSetJSON(SYLLABI_KEY, index);
+    }
+
+    window.downloadFile = function(storageKey) {
+      const obj = safeGetJSON(storageKey, null);
+      if (!obj || !obj.data) {
+        alert('No file found');
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = obj.data;
+      a.download = obj.name;
+      a.click();
+    };
+
+    document.getElementById('submitAllBtn').addEventListener('click', function() {
+      // Mark submission as completed
+      const submission = safeGetJSON(SUBMISSION_KEY, null);
+      if (submission) {
+        submission.uploadCompleted = true;
+        submission.uploadCompletedAt = new Date().toISOString();
+        safeSetJSON(SUBMISSION_KEY, submission);
+      }
+      alert('✓ Upload marked as complete. You can now close this page.');
+      // Optionally redirect back
+      // window.location.href = 'teacher.html';
+    });
+
+    // Initialize on page load
+    renderSubjects();
+  </script>
+</body>
+</html>

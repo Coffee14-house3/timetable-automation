@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>HOD Login - Teachers Data</title>
+<script>
+  (function() {
+    var _origFetch = window.fetch;
+    window.fetch = function(url, options) {
+      if (typeof url === 'string' && url.indexOf('http://localhost:5000') === 0) {
+        if (window.location.hostname !== 'localhost' || (window.location.port && window.location.port !== '5000')) {
+          url = url.replace('http://localhost:5000', '');
+        }
+      }
+      return _origFetch.call(this, url, options);
+    };
+  })();
+</script>
+  <style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bd: #1a3a5c; --bm: #2563a8; --bl: #4a90d9;
+  --gold: #e8b84b; --gl: #f5d87a;
+  --sw: 240px; --bg: #f0f4f9; --wh: #ffffff;
+  --tx: #1e2d40; --mu: #6b7e94; --br: #dde5ef;
+  --gn: #27ae60; --rd: #e74c3c; --or: #e67e22;
+}
+body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--tx); min-height:100vh; }
+
+/* SIDEBAR */
+.sb { position:fixed;top:0;left:0;bottom:0;width:var(--sw);background:linear-gradient(180deg,var(--bd) 0%,var(--bm) 100%);display:flex;flex-direction:column;z-index:100;box-shadow:4px 0 20px rgba(0,0,0,.15); }
+.sb-hd { padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,.12); }
+.sb-logo { font-family:'Playfair Display',serif;font-size:1rem;color:var(--gl);font-weight:700;line-height:1.3; }
+.sb-role { font-size:.7rem;color:rgba(63, 33, 33, 0.45);text-transform:uppercase;letter-spacing:.1em;margin-top:3px; }
+.sb-user { padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.1); }
+.sb-uname { color:#fff;font-size:.88rem;font-weight:700; }
+.sb-uemail { color:rgba(255,255,255,.5);font-size:.75rem;margin-top:2px; }
+nav { flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px; }
+.nb { padding:11px 14px;border-radius:10px;cursor:pointer;font-size:.87rem;font-weight:600;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:10px;transition:all .2s;border:none;background:transparent;width:100%;text-align:left; }
+.nb:hover { background:rgba(255,255,255,.1);color:#fff; }
+.nb.active { background:var(--gold);color:var(--bd); }
+.sb-ft { padding:14px 10px 20px;border-top:1px solid rgba(255,255,255,.1); }
+.btn-lo { width:100%;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:10px;background:transparent;color:rgba(255,255,255,.6);font-family:'Nunito',sans-serif;font-size:.85rem;cursor:pointer;transition:all .2s; }
+.btn-lo:hover { background:rgba(255,255,255,.1);color:#fff; }
+
+/* MAIN */
+.mn { margin-left:var(--sw);padding:32px; background:#f0f5fb; min-height:100vh; }
+.card { background:#fff; border-radius:16px; box-shadow:0 18px 40px rgba(43,73,118,.14); overflow:hidden; margin-bottom:24px; padding:24px; width:100%; max-width:1200px; }
+.card h1{ margin-top:0; color:var(--bd); font-size:2.1rem; }
+.table { min-width:100%; }
+.controls { margin-top:10px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.controls input { padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif; }
+.controls button { padding:8px 12px; margin-right:8px; font-weight:700; border-radius:9px; border:none; cursor:pointer; min-width:115px; }
+.controls button:last-child { margin-right:0; }
+.controls button:not(.danger) { background:var(--bl); color:#fff; }
+.controls .danger { background:var(--rd); color:#fff; }
+.card table { width:100%; border-collapse: collapse; margin-top: 12px; }
+.card table th, .card table td { padding: 12px 14px; border: 1px solid var(--br); text-align: left; }
+.card table th { background: #f5f8fd; color: var(--bd); font-weight: 700; font-size: 0.95rem; }
+.card table td { color: #2a3d56; font-size: 0.9rem; }
+.card table tr:nth-child(even) { background: #fbfdff; }
+.card table tbody > tr:hover { background: #ecf4fb; }
+.card small { color:#6b7f95; }
+    .tab-content { display:block; width:100%; }
+    .card table { width:100%; border-collapse: collapse; margin-top: 10px; }
+    .card table th, .card table td { padding: 10px 12px; border: 1px solid var(--br); text-align: left; }
+    .card table th { background: #f5f8fc; color: var(--bd); font-weight: 700; }
+    .card table tr:nth-child(even) { background: #fbfdff; }
+    .card table tbody > tr:hover { background: #eef4fb; }</style>
+</head>
+<body>
+<aside class="sb">
+  <div class="sb-hd">
+    <div class="sb-logo">Hindustan University</div>
+    <div class="sb-role">HOD Portal</div>
+  </div>
+  <div class="sb-user">
+    <div class="sb-uname">Head Of Department</div>
+    <div class="sb-uemail">hod@huniv.edu</div>
+  </div>
+  <nav>
+    <button type="button" class="nb active" onclick="showPage('teachers')">👩‍🏫 Teachers</button>
+    <button type="button" class="nb" onclick="showPage('teacher list')">📌 Teacher list </button>
+    <button type="button" class="nb" onclick="showPage('syllabus')">📖 Syllabus</button>
+    <button type="button" class="nb" onclick="showPage('uploads')">📁 Uploads</button>
+  </nav>
+  <div class="sb-ft">
+    <button type="button" class="btn-lo" onclick="logout()">🚪 Logout</button>
+  </div>
+</aside>
+
+<main class="mn">
+  <div class="card">
+    <h1>HOD Login Panel</h1>
+
+    <!-- Teachers Tab -->
+    <div id="teachersTab" class="tab-content">
+    <h2>Collected Teachers</h2>
+    
+    <div style="background:#f9fafb; padding:16px; border:1px solid var(--br); border-radius:8px; margin-bottom:16px;">
+      <h3 style="margin-top:0; margin-bottom:12px; color:var(--bd); font-size:1.1rem;">Add Teacher Manually</h3>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <input type="text" id="newTeacherCode" placeholder="Teacher Code" style="flex:1; min-width:120px; padding:10px; border:1px solid var(--br); border-radius:6px;">
+        <input type="email" id="newTeacherEmail" placeholder="Email Address" style="flex:2; min-width:150px; padding:10px; border:1px solid var(--br); border-radius:6px;">
+        <input type="text" id="newTeacherName" placeholder="Teacher Name" style="flex:2; min-width:150px; padding:10px; border:1px solid var(--br); border-radius:6px;">
+        <select id="newTeacherDesig" style="flex:2; min-width:150px; padding:10px; border:1px solid var(--br); border-radius:6px; background:#fff;">
+          <option value="">Select Designation</option>
+          <option value="Professor">Professor</option>
+          <option value="Professor (Part Time)">Professor (Part Time)</option>
+          <option value="Associate Professor">Associate Professor</option>
+          <option value="Associate Professor (Part Time)">Associate Professor (Part Time)</option>
+          <option value="Assistant Professor (SC)">Assistant Professor (SC)</option>
+          <option value="Assistant Professor (SC-Part Time)">Assistant Professor (SC-Part Time)</option>
+          <option value="Assistant Professor (SS)">Assistant Professor (SS)</option>
+          <option value="Assistant Professor (SS-Part Time)">Assistant Professor (SS-Part Time)</option>
+        </select>
+        <input type="number" id="newTeacherHours" placeholder="Working Hours" style="flex:1; min-width:120px; padding:10px; border:1px solid var(--br); border-radius:6px;">
+        <button onclick="addManualTeacher()" style="background:var(--gn); color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">➕ Add</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      <button onclick="clearAllTeachersData()" style="background:#e74c3c; color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">🗑️ Clear All Teachers Data</button>
+    </div>
+    <div id="teachersListMain" style="display:grid;gap:12px;max-height:520px;overflow:auto;padding-right:4px"></div>
+    <div id="timetablesOutput" style="margin-top:18px"></div>
+    </div>
+
+    <!-- Teacher List Tab -->
+    <div id="assignmentsTab" class="tab-content" style="display:none">
+      <h2>Teacher List</h2>
+      <div id="teachersList" style="display:grid;gap:12px;max-height:520px;overflow:auto;padding-right:4px"></div>
+    </div>
+
+    <!-- Syllabus Management Tab -->
+    <div id="syllabusTab" class="tab-content" style="display:none; width:100%;">
+      <h2>Manage Syllabus</h2>
+      
+      <div style="background:#f4f8ff; border:1px solid var(--br); border-left:4px solid var(--bm); padding:16px; border-radius:8px; margin-bottom:18px;">
+        <details>
+          <summary style="font-weight:700; color:var(--bd); cursor:pointer; outline:none;">📘 MCA Subject Hours Reference Guide (Click to Expand)</summary>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-top:16px; font-size:0.85rem; line-height:1.5;">
+            <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+              <strong style="color:var(--bm); font-size:0.95rem;">Semester I (26 hrs)</strong><br>
+              Statistics for Computer Science → 4 hrs<br>
+              Basics of Accounting → 2 hrs<br>
+              Object Oriented Programming → 5 hrs<br>
+              Data Communication & Networking → 3 hrs<br>
+              Software Engineering Concepts → 3 hrs<br>
+              Advanced Data Structures & Algorithms → 5 hrs<br>
+              Python Programming → 4 hrs
+            </div>
+            <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+              <strong style="color:var(--bm); font-size:0.95rem;">Semester II (27 hrs)</strong><br>
+              Machine Learning → 5 hrs<br>
+              Full Stack Web Development → 4 hrs<br>
+              Advanced Database Technologies → 4 hrs<br>
+              Research Methodology & IPR → 3 hrs<br>
+              DE-1 → 3 hrs<br>
+              DE-2 → 4 hrs<br>
+              Software Design Project → 4 hrs
+            </div>
+            <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+              <strong style="color:var(--bm); font-size:0.95rem;">Semester III (30 hrs)</strong><br>
+              Software Testing & Quality Assurance → 5 hrs<br>
+              Cryptography & Network Security → 5 hrs<br>
+              Open Online Courses → 3 hrs<br>
+              Communication Skills & Prof. Dev. → 3 hrs<br>
+              DE-3 → 4 hrs<br>
+              DE-4 → 4 hrs<br>
+              Research Paper Review → 6 hrs<br>
+              Internship → —
+            </div>
+            <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+              <strong style="color:var(--bm); font-size:0.95rem;">Semester IV (40 hrs)</strong><br>
+              Project Work → 40 hrs<br><br>
+              <strong style="color:#e74c3c; font-size:0.95rem;">🔥 Final Summary</strong><br>
+              Sem 1 → 26 hrs<br>
+              Sem 2 → 27 hrs<br>
+              Sem 3 → 30 hrs<br>
+              Sem 4 → 40 hrs<br>
+              <strong style="color:var(--bd);">👉 Grand Total = 123 hrs</strong>
+            </div>
+          </div>
+        </details>
+      </div>
+
+    <div style="background:#f9fcf5; border:1px solid var(--br); border-left:4px solid var(--gn); padding:16px; border-radius:8px; margin-bottom:18px;">
+      <details>
+        <summary style="font-weight:700; color:var(--bd); cursor:pointer; outline:none;">📗 BCA Subject Hours Reference Guide (Click to Expand)</summary>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-top:16px; font-size:0.85rem; line-height:1.5;">
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester I (27 hrs)</strong><br>
+            Computer Fundamentals & Org → 3 hrs<br>
+            Problem Solving Techniques → 4 hrs<br>
+            Data Structures → 5 hrs<br>
+            Maths for Computer Science → 4 hrs<br>
+            Communication Skills → 3 hrs<br>
+            Tamil Art and Culture → 2 hrs<br>
+            Environmental Science → 2 hrs<br>
+            Health and Wellbeing → 2 hrs<br>
+            Value Added (Choose ONE) → 2 hrs<br>
+            Outreach (Choose ONE) → 2 hrs<br>
+            Community Development → 2 hrs
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester II (26 hrs)</strong><br>
+            Object Oriented Programming → 4 hrs<br>
+            Database Management Systems → 4 hrs<br>
+            Multimedia Systems → 4 hrs<br>
+            Operating Systems → 3 hrs<br>
+            Personality Dev & Soft Skills → 3 hrs<br>
+            Digital Technological Solutions → 4 hrs<br>
+            Language (Tamil/Hindi/Telugu) → 2 hrs<br>
+            Health and Wellbeing → 2 hrs<br>
+            Value Added (Choose ONE) → 2 hrs<br>
+            Outreach (Choose ONE) → 2 hrs
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester III (27 hrs)</strong><br>
+            Computer Networks → 4 hrs<br>
+            Full Stack Web Development → 5 hrs<br>
+            Department Elective-1 → 4 hrs<br>
+            Non-Department Elective → 4 hrs<br>
+            Foreign Language → 2 hrs<br>
+            Public Speaking → 2 hrs<br>
+            Indian Knowledge System → 3 hrs<br>
+            CSR & SDG → 3 hrs<br>
+            Internship → —
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester IV (26 hrs)</strong><br>
+            Software Engineering → 5 hrs<br>
+            E-Commerce Technologies → 3 hrs<br>
+            Mobile Application Development → 4 hrs<br>
+            Digital Marketing → 3 hrs<br>
+            Accounting Tools → 3 hrs<br>
+            Department Elective-2 → 4 hrs<br>
+            Foreign Language (Intermediate) → 2 hrs<br>
+            English for Competitive Exams → 2 hrs
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester V (26 hrs)</strong><br>
+            Python for Cyber Security → 5 hrs<br>
+            Ethical Hacking & Systems Defense → 4 hrs<br>
+            Cyber Security and SIEM → 5 hrs<br>
+            Security Ethics → 5 hrs<br>
+            Industrial Cyber Threat Mgt → 1 hr<br>
+            Department Elective-3 → 4 hrs<br>
+            Python Programming Lab → 2 hrs
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester VI (31 hrs)</strong><br>
+            API and Network Security → 4 hrs<br>
+            Secure Coding Practices → 4 hrs<br>
+            Department Elective-4 → 4 hrs<br>
+            Industrial Access Control Models → 3 hrs<br>
+            Universal Human Values → 2 hrs<br>
+            Project Work → 14 hrs<br><br>
+            <strong style="color:#e74c3c; font-size:0.95rem;">🔥 Final Summary</strong><br>
+            Sems 1-6: 27+26+27+26+26+31<br>
+            <strong style="color:var(--bd);">👉 Grand Total = 163 hrs</strong>
+          </div>
+        </div>
+      </details>
+    </div>
+
+      <div class="controls" style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:18px; background:#f9fafb; padding:16px; border-radius:8px;">
+        <input type="text" id="inputSyllabusCode" placeholder="Subject Code" style="flex:1; min-width:140px; padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif;">
+        <input type="text" id="inputSyllabusName" placeholder="Subject Name" style="flex:2; min-width:200px; padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif;">
+        <input type="text" id="inputCourseCategory" placeholder="Course Category" style="flex:1.2; min-width:140px; padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif;">
+        <input type="text" id="inputSemester" placeholder="Semester" style="flex:0.9; min-width:100px; padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif;">
+        <select id="inputProgram" style="flex:1; min-width:110px; padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif; background:#fff;">
+          <option value="">Program</option>
+          <option value="BCA">BCA</option>
+          <option value="MCA">MCA</option>
+        </select>
+        <input type="number" id="inputL" placeholder="L" style="width:70px; padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif;">
+        <input type="number" id="inputT" placeholder="T" style="width:70px; padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif;">
+        <input type="number" id="inputP" placeholder="P" style="width:70px; padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif;">
+        <input type="number" id="inputC" placeholder="C" style="width:70px; padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif;">
+        <input type="number" id="inputS" placeholder="S" style="width:70px; padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif;">
+        <input type="number" id="inputTCH" placeholder="TCH" style="width:70px; padding:10px; border:1px solid var(--br); border-radius:6px; font-family:'Nunito',sans-serif;">
+        <button id="addSyllabusSubject" onclick="addSyllabusSubject()" style="background:var(--gn); color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">➕ Add</button>
+        <button onclick="renderSyllabusSubjects()" style="background:var(--bm); color:#fff; border:none; padding:10px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">🔄 Refresh</button>
+      </div>
+      <div style="overflow-x:auto; max-height:520px; overflow-y:auto; border:1px solid var(--br); border-radius:8px;">
+        <table id="syllabusTable" style="width:100%; border-collapse: collapse; margin-top:0;">
+          <thead>
+            <tr style="background:#f5f8fd; font-weight:700; color:var(--bd); position:sticky; top:0;">
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">Subj Code</th>
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">Name</th>
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">Course Category</th>
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">Sem</th>
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">Program</th>
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">L</th>
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">T</th>
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">P</th>
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">C</th>
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">S</th>
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">TCH</th>
+              <th style="padding:12px 14px; border:1px solid var(--br); text-align:left; font-size:0.95rem;">Action</th>
+            </tr>
+          </thead>
+          <tbody style="background:#fff;">
+            <tr><td colspan="11" style="padding:20px;text-align:center;color:#999;font-style:italic;">No subjects added yet. Use the form above to add subjects.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Subject Uploads Tab -->
+    <div id="uploadsTab" class="tab-content" style="display:none">
+      <h2>Subject Uploads (Syllabus & Details)</h2>
+      <div class="controls">
+        <button id="refreshUploads">Refresh</button>
+        <button id="exportUploads">Export Uploads Report</button>
+      </div>
+      <div id="uploadsOverview" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <script>
+    const KEY = 'teachers_data';
+    const SUBJECTS_KEY = 'curriculum_subjects';
+    const SYLLABUS_KEY = 'syllabus_subjects';
+
+    // Session validation - redirect to login if not authenticated
+    if (sessionStorage.getItem('portal_role') !== 'hod') {
+      window.location.href = 'index.html';
+    }
+
+    // safe JSON parse helper: returns default on error and recovers storage
+    function safeGetJSON(key, defaultVal) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw === null || raw === undefined) return defaultVal;
+        return JSON.parse(raw);
+      } catch (err) {
+        console.error('safeGetJSON parse error for', key, err);
+        try { localStorage.setItem(key, JSON.stringify(defaultVal)); } catch (e) { /* ignore */ }
+        return defaultVal;
+      }
+    }
+
+    // non-destructive parser: logs errors but does NOT overwrite storage
+    function safeGetJSONNoWrite(key, defaultVal) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw === null || raw === undefined) return defaultVal;
+        return JSON.parse(raw);
+      } catch (err) {
+        console.error('safeGetJSONNoWrite parse error for', key, err);
+        return defaultVal;
+      }
+    }
+
+    // Initialize default subjects if not present or missing keys
+
+    window.addManualTeacher = async function() {
+      const code = document.getElementById('newTeacherCode').value.trim();
+      const email = document.getElementById('newTeacherEmail').value.trim();
+      const name = document.getElementById('newTeacherName').value.trim();
+      const desig = document.getElementById('newTeacherDesig').value;
+      const hours = document.getElementById('newTeacherHours').value.trim();
+
+      if (!code || !email || !name || !desig) {
+        alert('Please fill all fields (Code, Email, Name, Designation)');
+        return;
+      }
+
+      try {
+        const payload = { code, name, email, designation: desig, hours: hours || 'N/A', workingHours: hours ? Number(hours) : null };
+        const res = await fetch('http://localhost:5000/api/teachers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || 'Failed to add teacher');
+        }
+
+        // Sync to local storage
+        const existing = safeGetJSONNoWrite(KEY, []);
+        const idx = existing.findIndex(t => t.code === code || t.email === email);
+        if (idx >= 0) existing.splice(idx, 1);
+        existing.push(payload);
+        localStorage.setItem(KEY, JSON.stringify(existing));
+      } catch(e) {
+        alert('Error: ' + e.message);
+        return;
+      }
+      
+      document.getElementById('newTeacherCode').value = '';
+      document.getElementById('newTeacherEmail').value = '';
+      document.getElementById('newTeacherName').value = '';
+      document.getElementById('newTeacherDesig').value = '';
+      document.getElementById('newTeacherHours').value = '';
+
+      await load();
+    };
+
+    window.removeTeacher = async function(code) {
+      if (!code) return;
+      if (!confirm('Remove faculty with code "' + code + '"? This action cannot be undone.')) return;
+      await fetch(`http://localhost:5000/api/teachers/${code}`, { method: 'DELETE' });
+      await load();
+    };
+
+    window.clearAllTeachersData = async function() {
+      if (!confirm('Are you sure you want to DELETE ALL teacher data? This action cannot be undone!')) return;
+      await fetch('http://localhost:5000/api/teachers', { method: 'DELETE' });
+      await load();
+    };
+
+    async function renderSyllabusSubjects() {
+      console.log('renderSyllabusSubjects called');
+      let subjects = [];
+      try {
+        const res = await fetch('http://localhost:5000/api/syllabus');
+        console.log('Fetch response status:', res.status, res.ok);
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+        subjects = await res.json();
+        console.log('Raw subjects response:', subjects);
+      } catch(e) {
+        console.error('Failed to load syllabus from backend:', e);
+        subjects = [];
+      }
+      if (subjects && subjects.length > 0) {
+        console.log('Keys available in the first subject document:', Object.keys(subjects[0]));
+      }
+      console.log('Subjects retrieved:', subjects);
+      
+      const table = document.getElementById('syllabusTable');
+      if (!table) {
+        console.error('syllabusTable not found!');
+        return;
+      }
+      
+      const tbody = table.querySelector('tbody');
+      if (!tbody) {
+        console.error('Syllabus table tbody not found!');
+        return;
+      }
+      
+      console.log('Starting to render subjects. Count:', subjects.length);
+      tbody.innerHTML = '';
+      
+      if (!subjects || subjects.length === 0) {
+        const emptyRow = document.createElement('tr');
+        emptyRow.innerHTML = '<td colspan="12" style="padding:20px;text-align:center;color:#999;">No subjects found. <a href="#" onclick="location.reload()">Reload page</a> or add subjects via the form above.</td>';
+        tbody.appendChild(emptyRow);
+        console.log('Empty table rendered');
+        return;
+      }
+      
+      subjects.forEach((subj, index) => {
+        const rows = [];
+        // Updated field mappings to prioritize actual database field names
+        const code = subj.courseCode || subj.code || subj.subjectCode || subj.SubjectCode || subj.subject_code || subj._id || '-';
+        const name = subj.subjectName || subj.name || subj.courseName || subj.subject_name || '-';
+        const category = subj.category || subj.courseCategory || subj.CourseCategory || subj.course_category || subj['Course Category'] || subj.type || '-';
+        const program = subj.program || subj.Program || subj.courseProgram || '-';
+        const semester = subj.semester || subj.sem || subj.semesterNo || '-';
+        const L = subj.L ?? subj.l ?? '-';
+        const T = subj.T ?? subj.t ?? '-';
+        const P = subj.P ?? subj.p ?? '-';
+        const C = subj.C ?? subj.c ?? '-';
+        const S = subj.S ?? subj.s ?? '-';
+        const TCH = subj.TCH ?? subj.tch ?? '-';
+        const deleteCode = subj.code || subj.subjectCode || subj.SubjectCode || subj.courseCode || subj.CourseCode || subj.subject_code || subj['Subject Code'] || subj.group || subj._id || '-';
+
+        if (index < 3) {
+          console.log(`📌 Subject ${index}: code="${code}", name="${name}", semester="${semester}", program="${program}"`);
+        }
+
+        if (Array.isArray(subj.options) && subj.options.length > 0) {
+          subj.options.forEach((option, optionIndex) => {
+            const code = option.courseCode || option.subjectCode || option.CourseCode || option.SubjectCode || option.code || deleteCode || '-';
+            const name = option.subjectName || option.courseName || option.name || option.SubjectName || option.CourseName || option.subject_name || option['Subject Name'] || subj.group || '-';
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid var(--br)';
+            tr.style.backgroundColor = (index + optionIndex) % 2 === 0 ? '#fbfdff' : '#fff';
+            tr.innerHTML = `
+              <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${code}</td>
+              <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${name}</td>
+              <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${category}</td>
+              <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${semester}</td>
+              <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${program}</td>
+              <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${L}</td>
+              <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${T}</td>
+              <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${P}</td>
+              <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${C}</td>
+              <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${S}</td>
+              <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${TCH}</td>
+              <td style="padding:12px 14px; border:1px solid var(--br);"><button type="button" onclick="removeSyllabusSubject('${deleteCode}')" style="background:#e74c3c;color:#fff;border:none;padding:6px 8px;border-radius:6px;cursor:pointer;">Delete</button></td>
+            `;
+            tbody.appendChild(tr);
+          });
+        } else {
+          const code = subj.code || subj.subjectCode || subj.SubjectCode || subj.courseCode || subj.CourseCode || subj.subject_code || subj['Subject Code'] || subj.group || subj._id || '-';
+          const name = subj.name || subj.subjectName || subj.SubjectName || subj.courseName || subj.CourseName || subj.subject_name || subj['Subject Name'] || subj.group || '-';
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid var(--br)';
+          tr.style.backgroundColor = index % 2 === 0 ? '#fbfdff' : '#fff';
+          tr.innerHTML = `
+            <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${code}</td>
+            <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${name}</td>
+            <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${category}</td>
+            <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${semester}</td>
+            <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${program}</td>
+            <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${L}</td>
+            <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${T}</td>
+            <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${P}</td>
+            <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${C}</td>
+            <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${S}</td>
+            <td style="padding:12px 14px; border:1px solid var(--br); color:#2a3d56; font-size:0.9rem;">${TCH}</td>
+            <td style="padding:12px 14px; border:1px solid var(--br);"><button type="button" onclick="removeSyllabusSubject('${code}')" style="background:#e74c3c;color:#fff;border:none;padding:6px 8px;border-radius:6px;cursor:pointer;">Delete</button></td>
+          `;
+          tbody.appendChild(tr);
+          if (index < 5) console.log(`Row ${index}: code=${code}, name=${name}`);
+        }
+      });
+      console.log('✅ Table rendered. Total subjects displayed:', subjects.length);
+    }
+
+    // Test API endpoint
+    async function testSyllabusAPI() {
+      try {
+        const res = await fetch('http://localhost:5000/api/syllabus');
+        const data = await res.json();
+        console.log('🔍 API Test - Returned data:', data);
+        console.log('🔍 API Test - Count:', data.length);
+        if (data.length > 0) {
+          console.log('🔍 API Test - First item keys:', Object.keys(data[0]));
+          console.log('🔍 API Test - First item:', data[0]);
+        }
+      } catch (e) {
+        console.error('❌ API Test failed:', e);
+      }
+    }
+    
+    window.testSyllabusAPI = testSyllabusAPI;
+
+    async function addSyllabusSubject() {
+      try {
+        console.log('Add Syllabus button clicked');
+        const code = document.getElementById('inputSyllabusCode').value.trim();
+        const name = document.getElementById('inputSyllabusName').value.trim();
+        const category = document.getElementById('inputCourseCategory').value.trim();
+        const semester = document.getElementById('inputSemester').value.trim();
+        const program = document.getElementById('inputProgram').value.trim();
+        const L = document.getElementById('inputL').value.trim();
+        const T = document.getElementById('inputT').value.trim();
+        const P = document.getElementById('inputP').value.trim();
+        const C = document.getElementById('inputC').value.trim();
+        const S = document.getElementById('inputS').value.trim();
+        const TCH = document.getElementById('inputTCH').value.trim();
+
+        console.log(`Code: ${code}, Name: ${name}, Category: ${category}, Semester: ${semester}, Program: ${program}`);
+
+        if (!code || !name || !category || !semester || !program) {
+          alert('Please fill subject code, name, category, semester, and program.');
+          return;
+        }
+
+        const res = await fetch('http://localhost:5000/api/syllabus', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, name, category, semester, program, L: L || '0', T: T || '0', P: P || '0', C: C || '0', S: S || '0', TCH: TCH || '0' })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        await renderSyllabusSubjects();
+
+        document.getElementById('inputSyllabusCode').value = '';
+        document.getElementById('inputSyllabusName').value = '';
+        document.getElementById('inputCourseCategory').value = '';
+        document.getElementById('inputSemester').value = '';
+        document.getElementById('inputProgram').value = '';
+        document.getElementById('inputL').value = '';
+        document.getElementById('inputT').value = '';
+        document.getElementById('inputP').value = '';
+        document.getElementById('inputC').value = '';
+        document.getElementById('inputS').value = '';
+        document.getElementById('inputTCH').value = '';
+        alert('Subject added successfully!');
+      } catch (err) {
+        console.error('Error adding syllabus subject:', err);
+        alert('Error adding subject: ' + err.message);
+      }
+    }
+
+    async function removeSyllabusSubject(code) {
+      if (!confirm('Are you sure you want to delete this subject?')) return;
+      await fetch(`http://localhost:5000/api/syllabus/${code}`, { method: 'DELETE' });
+      await renderSyllabusSubjects();
+    }
+
+    async function clearSyllabus() {
+      if (!confirm('Are you sure you want to clear all syllabus subjects?')) return;
+      await fetch('http://localhost:5000/api/syllabus', { method: 'DELETE' });
+      await renderSyllabusSubjects();
+    }
+
+    async function exportSyllabusCsv() {
+      let subjects = [];
+      try {
+        const res = await fetch('http://localhost:5000/api/syllabus');
+        subjects = await res.json();
+      } catch(e) { return; }
+      if (!subjects.length) { alert('No subjects to export'); return; }
+      let csv = 'Subject Code,Name,Course Category,Semester,L,T,P,C,S,TCH\n';
+      subjects.forEach(s => {
+        const code = s.code || s.subjectCode || s.SubjectCode || s.courseCode || s.CourseCode || s.subject_code || s['Subject Code'] || s._id || '';
+        const name = s.name || s.subjectName || s.SubjectName || s.courseName || s.CourseName || s.subject_name || s['Subject Name'] || '';
+        const category = s.category || s.courseCategory || s.CourseCategory || s.course_category || s['Course Category'] || '';
+        const row = [code, name, category, s.semester, s.L, s.T, s.P, s.C, s.S, s.TCH];
+        csv += '"' + row.map(v => (v+'').replace(/"/g, '""')).join('","') + '"\n';
+      });
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'syllabus_subjects.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function load() {
+      // Define workload hours by designation (per official workload norms)
+      const workloadHours = {
+        'dean': 40,
+        'hod': 40,
+        'professor': 38,
+        'professor (part time)': 16,
+        'associate professor': 40,
+        'associate professor (part time)': 24,
+        'assistant professor (sc)': 40,
+        'assistant professor (sc-part time)': 24,
+        'assistant professor (ss)': 40,
+        'assistant professor (ss-part time)': 24
+      };
+
+      let data = [];
+      try {
+        const res = await fetch('http://localhost:5000/api/teachers');
+        data = await res.json();
+        if (data && Array.isArray(data)) {
+          localStorage.setItem(KEY, JSON.stringify(data));
+        }
+      } catch(e) { console.error('Failed to load teachers from backend:', e); }
+      
+      console.log('admin.load: found entries', data.length);
+      const listMain = document.getElementById('teachersListMain');
+      const listSecondary = document.getElementById('teachersList');
+      if (listMain) listMain.innerHTML = '';
+      if (listSecondary) listSecondary.innerHTML = '';
+      let ug=0, pg=0, total=0;
+      data.forEach(t => {
+        total++;
+        // count UG/PG from classes array
+        if (t.classes && Array.isArray(t.classes)) {
+          t.classes.forEach(c => {
+            if (c.classType === 'UG') ug++; else if (c.classType === 'PG') pg++;
+          });
+        }
+        
+        const baseCard = document.createElement('div');
+        baseCard.style.padding = '16px';
+        baseCard.style.border = '1px solid var(--br)';
+        baseCard.style.borderRadius = '12px';
+        baseCard.style.background = '#fff';
+        baseCard.style.boxShadow = '0 8px 20px rgba(7,21,49,.04)';
+
+        let totalHours = 0;
+        if (t.classes && Array.isArray(t.classes)) {
+          t.classes.forEach(c => {
+            totalHours += Number(c.hours) || 0;
+          });
+        }
+        const displayHours = (t.workingHours !== undefined && t.workingHours !== null) ? t.workingHours : ((t.hours !== undefined && t.hours !== null && t.hours !== '') ? t.hours : (totalHours || 'N/A'));
+
+        baseCard.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:0.95rem;color:#6b7e94;font-weight:700;">Teacher Code: <span style="color:var(--bm);">${t.code || '-'}</span></div>
+              <div style="font-size:1.2rem;font-weight:700;color:var(--bd);">${t.name}</div>
+              <div style="margin-top:6px;color:#4f6078;">${t.email || 'No email provided'}</div>
+              <div style="margin-top:6px;color:#1e2d40;font-weight:600;">${t.designation || 'Designation not set'}</div>
+              <div style="margin-top:10px;color:#1e2d40;font-weight:600;">Hours: ${displayHours}</div>
+            </div>
+          </div>
+        `;
+
+        if (listSecondary) {
+          const secondaryCard = baseCard.cloneNode(true);
+          listSecondary.appendChild(secondaryCard);
+        }
+
+        if (listMain) {
+          const mainCard = baseCard.cloneNode(true);
+          const buttonWrapper = document.createElement('div');
+          buttonWrapper.style.display = 'flex';
+          buttonWrapper.style.justifyContent = 'flex-end';
+          buttonWrapper.style.marginTop = '12px';
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = 'Remove Faculty';
+          removeBtn.style.background = '#e74c3c';
+          removeBtn.style.color = '#fff';
+          removeBtn.style.border = 'none';
+          removeBtn.style.padding = '10px 14px';
+          removeBtn.style.borderRadius = '10px';
+          removeBtn.style.cursor = 'pointer';
+          removeBtn.style.fontWeight = '700';
+          removeBtn.addEventListener('click', () => removeTeacher(t.code));
+          buttonWrapper.appendChild(removeBtn);
+          mainCard.appendChild(buttonWrapper);
+          listMain.appendChild(mainCard);
+        }
+      });
+    }
+
+    // auto-refresh when localStorage changes (teacher submissions from other tab)
+    window.addEventListener('storage', (e) => {
+      if (e.key === KEY) {
+        console.log('storage event: teachers_data changed, reloading admin table');
+        load();
+      }
+    });
+
+    // Export CSV button - only attach if it exists
+    const exportCsvBtn = document.getElementById('exportCsv');
+    if (exportCsvBtn) {
+      exportCsvBtn.addEventListener('click', async () => {
+        let data = [];
+        try {
+          const res = await fetch('http://localhost:5000/api/teachers');
+          data = await res.json();
+        } catch(e) { return; }
+        if (!data.length) { alert('No data to export'); return; }
+        let csv = 'Code,Name,Email,Designation,Days,Submitted\n';
+        data.forEach(t => {
+          const row = [t.code||'', t.name, t.email||'', t.designation||'', '"'+(t.days||[]).join('; ')+'"', t.submittedAt];
+          csv += row.join(',') + '\n';
+        });
+        const blob = new Blob([csv],{type:'text/csv'}); const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = 'teachers_data.csv'; a.click(); URL.revokeObjectURL(url);
+      });
+    }
+
+    // Clear button - only attach if it exists
+    const clearBtn = document.getElementById('clear');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        if (!confirm('Clear all collected teachers data?')) return; localStorage.removeItem(KEY); load();
+      });
+    }
+
+    // Auto-calculate TCH based on L, T, P, S
+    function calculateTCH() {
+      const L = parseFloat(document.getElementById('inputL').value) || 0;
+      const T = parseFloat(document.getElementById('inputT').value) || 0;
+      const P = parseFloat(document.getElementById('inputP').value) || 0;
+      const S = parseFloat(document.getElementById('inputS').value) || 0;
+      document.getElementById('inputTCH').value = L + T + P + S;
+    }
+    ['inputL', 'inputT', 'inputP', 'inputS'].forEach(id => {
+      document.getElementById(id).addEventListener('input', calculateTCH);
+    });
+    
+    // --- timetable generation helpers (simplified from main generator) ---
+    const TIME_SLOTS = [
+      {time: '8:30-9:20', type: 'period', label: 'Period 1'},
+      {time: '9:20-10:10', type: 'period', label: 'Period 2'},
+      {time: '10:10-10:30', type: 'break', label: 'Break'},
+      {time: '10:30-11:20', type: 'period', label: 'Period 3'},
+      {time: '11:20-12:00', type: 'period', label: 'Period 4'},
+      {time: '12:00-1:00', type: 'lunch', label: 'Lunch'},
+      {time: '1:00-1:50', type: 'period', label: 'Period 5'},
+      {time: '1:50-2:40', type: 'period', label: 'Period 6'}
+    ];
+
+    function createTimetableGrid(subjects, days, workloadHours) {
+      const timetable = {}; const periodSlots = TIME_SLOTS.filter(s=>s.type==='period');
+      days.forEach(d => { timetable[d] = {}; TIME_SLOTS.forEach(s=> timetable[d][s.time]=null); });
+
+      // Track teacher hours assigned
+      const teacherHours = {};
+
+      // create entries list, but filter based on workload
+      let entries = [];
+      subjects.forEach(sub => {
+        const teacherWorkload = workloadHours[sub.teacher] || 16;
+        const currentHours = teacherHours[sub.teacher] || 0;
+
+        for (let i=0;i<sub.classes;i++) {
+          if (currentHours + 1 <= teacherWorkload) {
+            entries.push({subject: sub, type:'class'});
+            teacherHours[sub.teacher] = currentHours + 1;
+          } else {
+            console.warn(`Skipping additional class for ${sub.teacher} - would exceed ${teacherWorkload} hours`);
+          }
+        }
+        if (sub.labClasses>0 && currentHours + 1 <= teacherWorkload) {
+          entries.push({subject: sub, type:'labBlock', count: sub.labClasses});
+          teacherHours[sub.teacher] = (teacherHours[sub.teacher] || 0) + 1;
+        }
+      });
+      entries = shuffle(entries);
+
+      const allSlots = [];
+      days.forEach(day => periodSlots.forEach(slot => allSlots.push({day, slotInfo: slot})) );
+
+      let idx=0;
+      entries.forEach(e => {
+        if (idx >= allSlots.length) return;
+        if (e.type === 'labBlock') {
+          for (let k=0;k<e.count && idx<allSlots.length;k++){
+            const {day,slotInfo} = allSlots[idx++]; timetable[day][slotInfo.time] = {...e.subject, type:'lab'};
+          }
+        } else {
+          const {day,slotInfo} = allSlots[idx++]; timetable[day][slotInfo.time] = {...e.subject, type:'class'};
+        }
+      });
+      return timetable;
+    }
+
+    function shuffle(arr){ const a=[...arr]; for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+
+    function renderTimetableDOM(timetable, days, title){
+      const container = document.createElement('div');
+      container.style.marginBottom = '18px';
+      const h = document.createElement('h2'); h.textContent = title; container.appendChild(h);
+
+      const table = document.createElement('table'); table.style.width='100%'; table.style.borderCollapse='collapse';
+      const thead = document.createElement('thead'); const headRow = document.createElement('tr'); headRow.innerHTML = '<th>Time Slot</th>' + days.map(d=>`<th>${d}</th>`).join(''); thead.appendChild(headRow); table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      TIME_SLOTS.forEach(slotInfo=>{
+        const tr = document.createElement('tr');
+        const td0 = document.createElement('td'); td0.innerHTML = `<strong>${slotInfo.label}</strong><br><small>${slotInfo.time}</small>`; td0.style.padding='8px'; tr.appendChild(td0);
+        days.forEach(day => {
+          const entry = timetable[day][slotInfo.time];
+          const td = document.createElement('td'); td.style.padding='8px';
+          if (slotInfo.type==='break') td.innerHTML='☕ BREAK'; else if (slotInfo.type==='lunch') td.innerHTML='🍽️ LUNCH';
+          else if (entry) td.innerHTML = `<div style="font-weight:600">${entry.code}</div><div>${entry.name}</div><div style="font-size:0.9em;color:#333">${entry.teacher}</div>`;
+          else td.innerHTML = '-'; tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody); container.appendChild(table);
+
+      // export button
+      const btn = document.createElement('button'); btn.textContent = 'Export '+title+' CSV'; btn.style.marginTop='8px';
+      btn.addEventListener('click', ()=> exportTimetableCSV(timetable, days, title.replace(/\s+/g,'_')+'.csv'));
+      container.appendChild(btn);
+
+      return container;
+    }
+
+    function exportTimetableCSV(timetable, days, filename){
+      let csv = 'Time Slot,' + days.join(',') + '\n';
+      const rows = [];
+      TIME_SLOTS.forEach(slotInfo =>{
+        const cols = [];
+        cols.push(slotInfo.label + ' ('+slotInfo.time+')');
+        days.forEach(d=>{
+          const e = timetable[d][slotInfo.time];
+          if (!e) cols.push('-'); else cols.push(`${e.code} | ${e.name} | ${e.teacher}`);
+        });
+        rows.push(cols.join(','));
+      });
+      csv += rows.join('\n');
+      const blob = new Blob([csv],{type:'text/csv'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+    }
+
+    function generateAndRender(subjects, classLabel, teacherWorkloadMap){
+      // days default Mon-Fri
+      const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+      const timetable = createTimetableGrid(subjects, days, teacherWorkloadMap);
+      return renderTimetableDOM(timetable, days, classLabel + ' Timetable');
+    }
+
+    load();
+    renderSyllabusSubjects();  // Initialize syllabus table on page load
+    
+    // Load subject uploads overview
+    function loadUploadsOverview() {
+      const container = document.getElementById('uploadsOverview');
+      container.innerHTML = '';
+
+      // Collect all uploaded syllabi based on assignments
+      const uploads = [];
+      const teachers = safeGetJSONNoWrite(KEY, []);
+      const assignments = safeGetJSONNoWrite('coord_assignments', []);
+
+      assignments.forEach(assignment => {
+        const teacher = teachers.find(t => (t.email || t.name) === assignment.facultyId);
+        if (!teacher) return;
+
+        const [curriculumKey, subject] = assignment.subjectKey.split('::');
+        const syllabusKey = 'syllabus_' + encodeURIComponent(curriculumKey) + '_' + encodeURIComponent(subject);
+        const syllabus = safeGetJSONNoWrite(syllabusKey, null);
+
+        if (syllabus) {
+          const [semester, section, year, ...specParts] = curriculumKey.split('_');
+          const specialization = specParts.join('_') || '';
+          const classType = section.startsWith('MCA') ? 'PG' : 'UG';
+
+          uploads.push({
+            teacher: teacher.name,
+            designation: teacher.designation,
+            subject: subject,
+            curriculum: curriculumKey,
+            classType: classType,
+            section: section,
+            year: year,
+            semester: semester,
+            specialization: specialization,
+            fileName: syllabus.name,
+            weightage: syllabus.weightage,
+            classroomLink: syllabus.classroomLink,
+            uploadedAt: syllabus.savedAt,
+            storageKey: syllabusKey
+          });
+        }
+      });
+
+      if (uploads.length === 0) {
+        container.innerHTML = '<p style="color:#666">No subject uploads yet. Teachers will see upload forms after they submit their subject selections.</p>';
+        return;
+      }
+
+      // Group by curriculum
+      const grouped = {};
+      uploads.forEach(u => {
+        if (!grouped[u.curriculum]) {
+          grouped[u.curriculum] = [];
+        }
+        grouped[u.curriculum].push(u);
+      });
+
+      // Display grouped uploads
+      Object.keys(grouped).sort().forEach(curriculum => {
+        const currDiv = document.createElement('div');
+        currDiv.style.marginBottom = '24px';
+        currDiv.style.borderLeft = '4px solid #667eea';
+        currDiv.style.paddingLeft = '16px';
+
+        const currTitle = document.createElement('h3');
+        currTitle.textContent = curriculum.replace(/_/g, ' ');
+        currTitle.style.marginTop = '0';
+        currTitle.style.color = '#333';
+        currDiv.appendChild(currTitle);
+
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.marginBottom = '12px';
+        table.innerHTML = `
+          <thead>
+            <tr style="background:#f9fafb">
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">Subject</th>
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">Teacher</th>
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">Weightage</th>
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">Classroom</th>
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">File</th>
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">Uploaded</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        `;
+
+        grouped[curriculum].forEach(u => {
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid #eee';
+          
+          const fileLink = u.fileName ? `<a href="#" onclick="openUploadedFile('${u.storageKey}'); return false;" style="color:#667eea">${u.fileName}</a>` : '-';
+          const classroomLink = u.classroomLink ? `<a href="${u.classroomLink}" target="_blank" style="color:#667eea">View</a>` : '-';
+          const uploadDate = u.uploadedAt ? new Date(u.uploadedAt).toLocaleString() : '-';
+          
+          tr.innerHTML = `
+            <td style="padding:10px">${u.subject}</td>
+            <td style="padding:10px">${u.teacher}</td>
+            <td style="padding:10px">${u.weightage || '-'}${u.weightage ? '%' : ''}</td>
+            <td style="padding:10px">${classroomLink}</td>
+            <td style="padding:10px">${fileLink}</td>
+            <td style="padding:10px;font-size:0.9em">${uploadDate}</td>
+          `;
+          table.querySelector('tbody').appendChild(tr);
+        });
+
+        currDiv.appendChild(table);
+        container.appendChild(currDiv);
+      });
+    }
+
+    window.openUploadedFile = function(storageKey) {
+      const obj = safeGetJSONNoWrite(storageKey, null);
+      if (!obj || !obj.data) {
+        alert('File not found');
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = obj.data;
+      a.download = obj.name || 'syllabus';
+      a.click();
+    };
+
+    // Upload event listeners - only attach if elements exist
+    const refreshUploadsBtn = document.getElementById('refreshUploads');
+    if (refreshUploadsBtn) {
+      refreshUploadsBtn.addEventListener('click', loadUploadsOverview);
+    }
+
+    const exportUploadsBtn = document.getElementById('exportUploads');
+    if (exportUploadsBtn) {
+      exportUploadsBtn.addEventListener('click', () => {
+        const teachers = safeGetJSONNoWrite(KEY, []);
+        const assignments = safeGetJSONNoWrite('coord_assignments', []);
+        const uploads = [];
+
+        assignments.forEach(assignment => {
+          const teacher = teachers.find(t => (t.email || t.name) === assignment.facultyId);
+          if (!teacher) return;
+
+          const [curriculumKey, subject] = assignment.subjectKey.split('::');
+          const syllabusKey = 'syllabus_' + encodeURIComponent(curriculumKey) + '_' + encodeURIComponent(subject);
+          const syllabus = safeGetJSONNoWrite(syllabusKey, null);
+
+          if (syllabus) {
+            uploads.push({
+              curriculum: curriculumKey,
+              subject: subject,
+              teacher: teacher.name,
+              designation: teacher.designation,
+              fileName: syllabus.name || '',
+              weightage: syllabus.weightage || '',
+              classroomLink: syllabus.classroomLink || '',
+              uploadedAt: syllabus.savedAt || ''
+            });
+          }
+        });
+
+        if (!uploads.length) {
+          alert('No uploads to export');
+          return;
+        }
+
+        let csv = 'Curriculum,Subject,Teacher,Designation,File Name,Weightage,Classroom Link,Upload Date\n';
+        uploads.forEach(u => {
+          const row = [u.curriculum, u.subject, u.teacher, u.designation, u.fileName, u.weightage, u.classroomLink, u.uploadedAt];
+          csv += '"' + row.map(v => (v + '').replace(/"/g, '""')).join('","') + '"\n';
+        });
+
+        const blob = new Blob([csv], {type: 'text/csv'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'subject_uploads_' + new Date().toISOString().split('T')[0] + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
+    
+    // Load subject assignments overview
+    function loadAssignmentsOverview() {
+      const teachers = safeGetJSONNoWrite(KEY, []);
+      const coordAssignments = safeGetJSONNoWrite('coord_assignments', []);
+      const container = document.getElementById('assignmentsOverview');
+      container.innerHTML = '';
+      
+      if (!coordAssignments.length) {
+        container.innerHTML = '<p>No assignments available. Coordinator needs to assign subjects first.</p>';
+        return;
+      }
+      
+      // Group assignments by class configuration
+      const assignments = {};
+      
+      coordAssignments.forEach(assignment => {
+        const teacher = teachers.find(t => (t.email || t.name) === assignment.facultyId);
+        if (!teacher) return;
+
+        const [curriculumKey, subject] = assignment.subjectKey.split('::');
+        const [semester, section, year, ...specParts] = curriculumKey.split('_');
+        const specialization = specParts.join('_') || '';
+        const classType = section.startsWith('MCA') ? 'PG' : 'UG';
+        const key = `${classType}_${section}_${year}_${semester}${specialization ? '_' + specialization : ''}`;
+
+        if (!assignments[key]) {
+          assignments[key] = [];
+        }
+        assignments[key].push({
+          subject: subject,
+          teacher: teacher.name,
+          designation: teacher.designation
+        });
+      });
+      
+      // Display assignments
+      Object.keys(assignments).sort().forEach(classKey => {
+        const classDiv = document.createElement('div');
+        classDiv.style.marginBottom = '20px';
+        classDiv.style.padding = '12px';
+        classDiv.style.border = '1px solid #ddd';
+        classDiv.style.borderRadius = '6px';
+        
+        const title = document.createElement('h3');
+        title.textContent = classKey.replace(/_/g, ' ');
+        classDiv.appendChild(title);
+        
+        const subjectList = document.createElement('ul');
+        assignments[classKey].forEach(assignment => {
+          const li = document.createElement('li');
+          li.textContent = `${assignment.subject} - ${assignment.teacher} (${assignment.designation})`;
+          subjectList.appendChild(li);
+        });
+        classDiv.appendChild(subjectList);
+        
+        container.appendChild(classDiv);
+      });
+    }
+    
+
+    function showPage(section) {
+      document.getElementById('teachersTab').style.display = 'none';
+      document.getElementById('assignmentsTab').style.display = 'none';
+      document.getElementById('syllabusTab').style.display = 'none';
+      document.getElementById('uploadsTab').style.display = 'none';
+
+      if (section === 'teachers') {
+        document.getElementById('teachersTab').style.display = 'block';
+      } else if (section === 'teacher list') {
+        document.getElementById('assignmentsTab').style.display = 'block';
+      } else if (section === 'syllabus') {
+        document.getElementById('syllabusTab').style.display = 'block';
+        setTimeout(() => {
+          renderSyllabusSubjects();
+        }, 100);
+      } else if (section === 'uploads') {
+        document.getElementById('uploadsTab').style.display = 'block';
+        loadUploadsOverview();
+      }
+
+      document.querySelectorAll('.nb').forEach(btn => btn.classList.remove('active'));
+      const button = Array.from(document.querySelectorAll('.nb')).find(btn => btn.textContent.toLowerCase().includes(section));
+      if (button) button.classList.add('active');
+    }
+
+    // Debug function to check syllabus data
+    window.debugSyllabus = function() {
+      console.log('=== Syllabus Debug ===');
+      const data = localStorage.getItem(SYLLABUS_KEY);
+      console.log('Raw localStorage:', data);
+      const parsed = getSyllabusSubjects();
+      console.log('Parsed subjects:', parsed);
+      console.log('Number of subjects:', parsed.length);
+      console.log('To clear all data, run: localStorage.removeItem("' + SYLLABUS_KEY + '")');
+    };
+
+    // Clear all data function
+    window.clearAllData = async function() {
+      if (confirm('Are you sure you want to DELETE ALL data? This cannot be undone!')) {
+        localStorage.removeItem(KEY);  // teachers_data
+        localStorage.removeItem(SYLLABUS_KEY);  // syllabus_subjects
+        localStorage.removeItem('coord_assignments');
+        localStorage.removeItem('portal_role');
+        try {
+          await fetch('http://localhost:5000/api/teachers', { method: 'DELETE' });
+          await fetch('http://localhost:5000/api/syllabus', { method: 'DELETE' });
+        } catch(e) { console.error('Error clearing backend data:', e); }
+        console.log('All data cleared!');
+        location.reload();
+      }
+    };
+
+    console.log('HOD Portal loaded. Run debugSyllabus() in console to check syllabus data.');
+
+    // Logout function
+    window.logout = function() {
+      sessionStorage.clear();
+      window.location.replace('index.html');
+    };
+  </script>
+</body>
+</html>

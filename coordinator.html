@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+<title>Coordinator Portal – Hindustan University</title>
+<script>
+  (function() {
+    var _origFetch = window.fetch;
+    window.fetch = function(url, options) {
+      if (typeof url === 'string' && url.indexOf('http://localhost:5000') === 0) {
+        if (window.location.hostname !== 'localhost' || (window.location.port && window.location.port !== '5000')) {
+          url = url.replace('http://localhost:5000', '');
+        }
+      }
+      return _origFetch.call(this, url, options);
+    };
+  })();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bd: #1a3a5c; --bm: #2563a8; --bl: #4a90d9;
+  --gold: #e8b84b; --gl: #f5d87a;
+  --sw: 240px; --bg: #f0f4f9; --wh: #ffffff;
+  --tx: #1e2d40; --mu: #6b7e94; --br: #dde5ef;
+  --gn: #27ae60; --rd: #e74c3c; --or: #e67e22;
+}
+body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--tx); min-height:100vh; }
+
+/* SIDEBAR */
+.sb { position:fixed;top:0;left:0;bottom:0;width:var(--sw);background:linear-gradient(180deg,var(--bd) 0%,var(--bm) 100%);display:flex;flex-direction:column;z-index:100;box-shadow:4px 0 20px rgba(0,0,0,.15); }
+.sb-hd { padding:22px 20px 16px;border-bottom:1px solid rgba(255,255,255,.12); }
+.sb-logo { font-family:'Playfair Display',serif;font-size:1rem;color:var(--gl);font-weight:700;line-height:1.3; }
+.sb-role { font-size:.7rem;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.1em;margin-top:3px; }
+.sb-user { padding:12px 20px;border-bottom:1px solid rgba(255,255,255,.1); }
+.sb-uname { color:#fff;font-size:.88rem;font-weight:700; }
+.sb-uemail { color:rgba(255,255,255,.5);font-size:.75rem;margin-top:2px; }
+nav { flex:1;padding:14px 10px;display:flex;flex-direction:column;gap:2px; }
+.nb { padding:11px 14px;border-radius:10px;cursor:pointer;font-size:.87rem;font-weight:600;color:rgba(255,255,255,.6);display:flex;align-items:center;gap:10px;transition:all .2s;border:none;background:transparent;width:100%;text-align:left; }
+.nb:hover { background:rgba(255,255,255,.1);color:#fff; }
+.nb.active { background:var(--gold);color:var(--bd); }
+.sb-ft { padding:14px 10px 20px;border-top:1px solid rgba(255,255,255,.1); }
+.btn-lo { width:100%;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:10px;background:transparent;color:rgba(255,255,255,.6);font-family:'Nunito',sans-serif;font-size:.85rem;cursor:pointer;transition:all .2s; }
+.btn-lo:hover { background:rgba(255,255,255,.1);color:#fff; }
+
+/* MAIN */
+.mn { margin-left:var(--sw);padding:28px; }
+.pg { display:none; }
+.pg.active { display:block;animation:fi .2s ease; }
+@keyframes fi { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.pg-title { font-family:'Playfair Display',serif;font-size:1.65rem;color:var(--bd);font-weight:700; }
+.pg-sub { color:var(--mu);font-size:.87rem;margin-top:4px;margin-bottom:24px; }
+
+/* STATS */
+.stats { display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px; }
+.stat { background:var(--wh);border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.06);border-left:4px solid var(--bl); }
+.stat.g{border-left-color:var(--gn)}.stat.o{border-left-color:var(--gold)}.stat.r{border-left-color:var(--rd)}
+.sl { font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);margin-bottom:6px; }
+.sv { font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--bd); }
+
+/* CARD */
+.card { background:var(--wh);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);overflow:hidden;margin-bottom:20px; }
+.ch { padding:14px 20px;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between; }
+.ch h3 { font-family:'Playfair Display',serif;font-size:1rem;color:var(--bd); }
+.cb { padding:20px; }
+
+/* TABLE */
+.tbl { width:100%;border-collapse:collapse; }
+.tbl th { background:#f7f9fc;color:var(--mu);font-size:.73rem;text-transform:uppercase;letter-spacing:.05em;padding:10px 14px;border-bottom:2px solid var(--br);text-align:left; }
+.tbl td { padding:11px 14px;font-size:.87rem;border-bottom:1px solid var(--br); }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr:hover td { background:#f8fbff; }
+
+/* BADGE */
+.badge { display:inline-block;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700; }
+.bg { background:#e8f0fc;color:#2563a8; }
+.gg { background:#e8f8f0;color:#27ae60; }
+.go { background:#fef8e7;color:#b8860b; }
+.gr { background:#fde8e8;color:#e74c3c; }
+.gz { background:#f0f2f4;color:#6b7e94; }
+
+/* BTNS */
+.btn { padding:8px 16px;border:none;border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;transition:all .2s; }
+.btn:hover { opacity:.88;transform:translateY(-1px); }
+.btn-bl  { background:var(--bm);color:#fff; }
+.btn-gol { background:var(--gold);color:var(--bd); }
+.btn-gn  { background:var(--gn);color:#fff; }
+.btn-rd  { background:transparent;color:var(--rd);border:1px solid var(--rd); }
+.btn-rd:hover { background:var(--rd);color:#fff; }
+.btn-sm { padding:5px 11px;font-size:.78rem; }
+
+/* PREFERENCE CARDS */
+.pfc { background:var(--wh);border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:20px;overflow:hidden; }
+.pfc-hd { padding:16px 20px;background:linear-gradient(135deg,var(--bd),var(--bm));display:flex;align-items:center;justify-content:space-between; }
+.pfc-name { font-family:'Playfair Display',serif;font-size:1.05rem;color:#fff;font-weight:700; }
+.pfc-desig { font-size:.75rem;color:rgba(255,255,255,.6);margin-top:2px; }
+.pfc-bd { padding:16px 20px; }
+.psg { display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px; }
+.psc { border:1.5px solid var(--br);border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;transition:border-color .2s; }
+.psc:hover { border-color:var(--bl); }
+.psc.done { border-color:#7dcfa0;background:#f0faf5; }
+.psc.taken { border-color:#c5cfe8;background:#f5f7fc;opacity:.7; }
+.pi { flex:1;min-width:0; }
+.pi-name { font-weight:700;font-size:.88rem;color:var(--tx); }
+.pi-curr { font-size:.73rem;color:var(--mu);margin-top:3px;line-height:1.4; }
+.pi-status { font-size:.73rem;font-weight:600;margin-top:4px; }
+.pi-status.ok  { color:var(--gn); }
+.pi-status.tak { color:var(--mu); }
+.btn-asgn { flex-shrink:0;padding:5px 13px;border:none;border-radius:7px;background:var(--bm);color:#fff;font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap; }
+.btn-asgn:hover { background:var(--bd); }
+.btn-rmv  { flex-shrink:0;padding:5px 11px;border:1px solid var(--rd);border-radius:7px;background:transparent;color:var(--rd);font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap; }
+.btn-rmv:hover { background:var(--rd);color:#fff; }
+.no-pref { color:var(--mu);font-size:.85rem;font-style:italic; }
+
+/* TIMETABLE */
+.tt-ctrls { display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center; }
+.tt-flt { padding:8px 12px;border:1px solid var(--br);border-radius:8px;font-family:'Nunito',sans-serif;font-size:.85rem;color:var(--tx);background:#fff;outline:none; }
+.tt-wrap { overflow-x:auto; }
+.tt-tbl { border-collapse:collapse;min-width:820px;width:100%; }
+.tt-tbl th { background:var(--bd);color:#fff;padding:10px 8px;font-size:.75rem;border:1px solid rgba(255,255,255,.12);text-align:center;white-space:nowrap; }
+.tt-tbl th:first-child { background:var(--bm);min-width:84px; }
+.tt-tbl td { border:1px solid var(--br);padding:5px;height:78px;vertical-align:top;background:#fff;min-width:122px; }
+.tt-tbl td.dc { background:#f7f9fc;font-weight:700;font-size:.82rem;color:var(--bd);text-align:center;vertical-align:middle;font-family:'Playfair Display',serif; }
+.tts { background:linear-gradient(135deg,#e8f0fc,#d4e4f7);border-radius:8px;padding:6px 8px;height:100%;font-size:.73rem;line-height:1.4;position:relative;border-left:3px solid var(--bm); }
+.tts.hl { background:linear-gradient(135deg,#fef8e7,#fdefc4);border-left-color:var(--gold); }
+.tts .sn { font-weight:700;color:var(--bd);font-size:.75rem; }
+.tts .st { color:var(--mu);font-size:.68rem;margin-top:2px; }
+.tts .sc { color:#aab5c4;font-size:.64rem;margin-top:1px; }
+.tts-rm { position:absolute;top:3px;right:4px;cursor:pointer;color:var(--rd);font-size:.68rem;opacity:0;transition:opacity .15s;border:none;background:transparent;padding:0;font-family:inherit; }
+.tts:hover .tts-rm { opacity:1; }
+.tt-add { width:100%;height:100%;background:transparent;border:1.5px dashed #c5d8ef;border-radius:8px;color:#b0c4d8;font-size:.75rem;cursor:pointer;transition:all .2s;font-family:'Nunito',sans-serif; }
+.tt-add:hover { border-color:var(--bl);color:var(--bm);background:#f0f6ff; }
+
+/* MODAL */
+.moverlay { position:fixed;inset:0;background:rgba(26,58,92,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:999; }
+.moverlay.open { display:flex; }
+.modal { background:#fff;border-radius:18px;padding:26px;width:490px;max-width:96vw;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:fi .2s ease; }
+.modal h3 { font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--bd);margin-bottom:16px; }
+.fg { margin-bottom:13px; }
+.fg label { font-size:.75rem;font-weight:700;color:var(--mu);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em; }
+.fg select { width:100%;padding:10px 12px;border:1px solid var(--br);border-radius:9px;font-family:'Nunito',sans-serif;font-size:.9rem;color:var(--tx);background:#fff;outline:none; }
+.fg select:focus { border-color:var(--bl);box-shadow:0 0 0 3px rgba(74,144,217,.12); }
+.mfoot { display:flex;gap:10px;justify-content:flex-end;margin-top:18px; }
+.btn-cancel { background:var(--bg);color:var(--mu);border:1px solid var(--br);padding:9px 18px;border-radius:9px;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:600; }
+
+.empty { padding:40px;text-align:center;color:var(--mu);font-size:.9rem; }
+</style>
+</head>
+<body>
+
+<aside class="sb">
+  <div class="sb-hd">
+    <div class="sb-logo">Hindustan University</div>
+    <div class="sb-role">Coordinator Portal</div>
+  </div>
+  <div class="sb-user">
+    <div class="sb-uname">Timetable Coordinator</div>
+    <div class="sb-uemail">coordinator@huniv.edu</div>
+  </div>
+  <nav>
+    <button type="button" class="nb active" data-target="dashboard" onclick="showPage('dashboard',this)">📊 &nbsp;Dashboard</button>
+    <button type="button" class="nb" data-target="catalog" onclick="showPage('catalog',this)">📖 &nbsp;Subject Catalog</button>
+    <button type="button" class="nb" data-target="preferences" onclick="showPage('preferences',this)">⭐ &nbsp;Assign Subjects</button>
+    <button type="button" class="nb" data-target="assignments" onclick="showPage('assignments',this)">📌 &nbsp;All Assignments</button>
+    <button type="button" class="nb" data-target="timetable" onclick="showPage('timetable',this)">🗓 &nbsp;Build Timetable</button>
+  </nav>
+  <div class="sb-ft">
+    <button type="button" class="btn-lo" onclick="logout()">🚪 &nbsp;Logout</button>
+  </div>
+</aside>
+
+<main class="mn">
+
+  <!-- DASHBOARD -->
+  <div class="pg active" id="pg-dashboard">
+    <div class="pg-title">Dashboard</div>
+    <div class="pg-sub">
+      <strong>Your Role:</strong> Review faculty preferences and assign subjects. Faculty submit their preferred subjects, and you approve/assign them. Build the final timetable schedule for all classes.
+    </div>
+    <div class="stats" id="dashStats"></div>
+    <div class="card">
+      <div class="ch"><h3>Faculty Summary</h3><button class="btn btn-gol btn-sm" onclick="fetchBackendData()">↻ Refresh</button></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Faculty Name</th><th>Designation</th><th>Preferred Subjects</th><th>Assigned</th><th>Pending</th></tr></thead>
+          <tbody id="dashTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUBJECT CATALOG -->
+  <div class="pg" id="pg-catalog">
+    <div class="pg-title">Subject Catalog</div>
+    <div class="pg-sub">View all curriculum subjects and check their allocation status.</div>
+    
+    <div style="background:#f4f8ff; border:1px solid var(--br); border-left:4px solid var(--bm); padding:16px; border-radius:8px; margin-bottom:18px;">
+      <details>
+        <summary style="font-weight:700; color:var(--bd); cursor:pointer; outline:none;">📘 MCA Subject Hours Reference Guide (Click to Expand)</summary>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-top:16px; font-size:0.85rem; line-height:1.5;">
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--bm); font-size:0.95rem;">Semester I (26 hrs)</strong><br>
+            Statistics for Computer Science → 4 hrs<br>
+            Basics of Accounting → 2 hrs<br>
+            Object Oriented Programming → 5 hrs<br>
+            Data Communication & Networking → 3 hrs<br>
+            Software Engineering Concepts → 3 hrs<br>
+            Advanced Data Structures & Algorithms → 5 hrs<br>
+            Python Programming → 4 hrs
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--bm); font-size:0.95rem;">Semester II (27 hrs)</strong><br>
+            Machine Learning → 5 hrs<br>
+            Full Stack Web Development → 4 hrs<br>
+            Advanced Database Technologies → 4 hrs<br>
+            Research Methodology & IPR → 3 hrs<br>
+            DE-1 → 3 hrs<br>
+            DE-2 → 4 hrs<br>
+            Software Design Project → 4 hrs
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--bm); font-size:0.95rem;">Semester III (30 hrs)</strong><br>
+            Software Testing & Quality Assurance → 5 hrs<br>
+            Cryptography & Network Security → 5 hrs<br>
+            Open Online Courses → 3 hrs<br>
+            Communication Skills & Prof. Dev. → 3 hrs<br>
+            DE-3 → 4 hrs<br>
+            DE-4 → 4 hrs<br>
+            Research Paper Review → 6 hrs<br>
+            Internship → —
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--bm); font-size:0.95rem;">Semester IV (40 hrs)</strong><br>
+            Project Work → 40 hrs<br><br>
+            <strong style="color:#e74c3c; font-size:0.95rem;">🔥 Final Summary</strong><br>
+            Sem 1 → 26 hrs<br>
+            Sem 2 → 27 hrs<br>
+            Sem 3 → 30 hrs<br>
+            Sem 4 → 40 hrs<br>
+            <strong style="color:var(--bd);">👉 Grand Total = 123 hrs</strong>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div style="background:#f9fcf5; border:1px solid var(--br); border-left:4px solid var(--gn); padding:16px; border-radius:8px; margin-bottom:18px;">
+      <details>
+        <summary style="font-weight:700; color:var(--bd); cursor:pointer; outline:none;">📗 BCA Subject Hours Reference Guide (Click to Expand)</summary>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-top:16px; font-size:0.85rem; line-height:1.5;">
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester I (27 hrs)</strong><br>
+            Computer Fundamentals & Org → 3 hrs<br>
+            Problem Solving Techniques → 4 hrs<br>
+            Data Structures → 5 hrs<br>
+            Maths for Computer Science → 4 hrs<br>
+            Communication Skills → 3 hrs<br>
+            Tamil Art and Culture → 2 hrs<br>
+            Environmental Science → 2 hrs<br>
+            Health and Wellbeing → 2 hrs<br>
+            Value Added (Choose ONE) → 2 hrs<br>
+            Outreach (Choose ONE) → 2 hrs<br>
+            Community Development → 2 hrs
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester II (26 hrs)</strong><br>
+            Object Oriented Programming → 4 hrs<br>
+            Database Management Systems → 4 hrs<br>
+            Multimedia Systems → 4 hrs<br>
+            Operating Systems → 3 hrs<br>
+            Personality Dev & Soft Skills → 3 hrs<br>
+            Digital Technological Solutions → 4 hrs<br>
+            Language (Tamil/Hindi/Telugu) → 2 hrs<br>
+            Health and Wellbeing → 2 hrs<br>
+            Value Added (Choose ONE) → 2 hrs<br>
+            Outreach (Choose ONE) → 2 hrs
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester III (27 hrs)</strong><br>
+            Computer Networks → 4 hrs<br>
+            Full Stack Web Development → 5 hrs<br>
+            Department Elective-1 → 4 hrs<br>
+            Non-Department Elective → 4 hrs<br>
+            Foreign Language → 2 hrs<br>
+            Public Speaking → 2 hrs<br>
+            Indian Knowledge System → 3 hrs<br>
+            CSR & SDG → 3 hrs<br>
+            Internship → —
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester IV (26 hrs)</strong><br>
+            Software Engineering → 5 hrs<br>
+            E-Commerce Technologies → 3 hrs<br>
+            Mobile Application Development → 4 hrs<br>
+            Digital Marketing → 3 hrs<br>
+            Accounting Tools → 3 hrs<br>
+            Department Elective-2 → 4 hrs<br>
+            Foreign Language (Intermediate) → 2 hrs<br>
+            English for Competitive Exams → 2 hrs
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester V (26 hrs)</strong><br>
+            Python for Cyber Security → 5 hrs<br>
+            Ethical Hacking & Systems Defense → 4 hrs<br>
+            Cyber Security and SIEM → 5 hrs<br>
+            Security Ethics → 5 hrs<br>
+            Industrial Cyber Threat Mgt → 1 hr<br>
+            Department Elective-3 → 4 hrs<br>
+            Python Programming Lab → 2 hrs
+          </div>
+          <div style="background:#fff; padding:12px; border-radius:6px; border:1px solid var(--br);">
+            <strong style="color:var(--gn); font-size:0.95rem;">Semester VI (31 hrs)</strong><br>
+            API and Network Security → 4 hrs<br>
+            Secure Coding Practices → 4 hrs<br>
+            Department Elective-4 → 4 hrs<br>
+            Industrial Access Control Models → 3 hrs<br>
+            Universal Human Values → 2 hrs<br>
+            Project Work → 14 hrs<br><br>
+            <strong style="color:#e74c3c; font-size:0.95rem;">🔥 Final Summary</strong><br>
+            Sems 1-6: 27+26+27+26+26+31<br>
+            <strong style="color:var(--bd);">👉 Grand Total = 163 hrs</strong>
+          </div>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="ch">
+        <div style="display:flex; gap:10px; align-items:center;">
+          <select id="catProgram" class="tt-flt" onchange="updateCatSemester()">
+            <option value="">— Program & Section —</option>
+            <option value="BCA A">BCA A</option>
+            <option value="BCA B">BCA B</option>
+            <option value="BCA C">BCA C</option>
+            <option value="MCA A">MCA A</option>
+            <option value="MCA B">MCA B</option>
+          </select>
+          <select id="catSemester" class="tt-flt" onchange="renderCatalog()">
+            <option value="">— Semester —</option>
+          </select>
+          <span class="badge bg" id="catCount">0 subjects</span>
+        </div>
+        <button class="btn btn-bl btn-sm" onclick="renderCatalog()">↻ Refresh</button>
+      </div>
+      <div class="cb" style="overflow-x:auto;">
+        <table class="tbl">
+          <thead>
+            <tr><th>Code</th><th>Name</th><th>Category</th><th>Section</th><th>Semester</th><th>TCH</th><th>Status</th></tr>
+          </thead>
+          <tbody id="catalogTable">
+            <tr><td colspan="7" class="empty">Please select a program and section to view the catalog.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- FACULTY PREFERENCES -->
+  <div class="pg" id="pg-preferences">
+    <div class="pg-title">Faculty Preferences</div>
+    <div class="pg-sub">
+      <strong>Your Role:</strong> Review each faculty member's subject preferences (ranked by their preference) and assign subjects to them.
+      <br/><strong>Left Side (Faculty Preferences):</strong> Shows subjects the faculty submitted and ranked. Use "Accept Preference" to approve their request.
+      <br/><strong>Right Side (Available Subjects):</strong> Shows all curriculum subjects not yet assigned. Use "Assign New Subject" to give them a different class.
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-bottom:18px;">
+      <button id="togglePrefBtn" class="btn" onclick="togglePreferences()">...</button>
+      <button class="btn btn-gol" onclick="balanceLoad()">⚖️ Balance Load</button>
+      <button class="btn btn-bl btn-sm" onclick="fetchBackendData()">↻ Refresh</button>
+    </div>
+    <div id="prefContainer"></div>
+  </div>
+
+  <!-- ALL ASSIGNMENTS -->
+  <div class="pg" id="pg-assignments">
+    <div class="pg-title">All Assignments</div>
+    <div class="pg-sub">Full list of assigned subjects. Removing here reflects immediately in the faculty portal.</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px">
+      <button class="btn btn-gol" onclick="fetchBackendData()">↻ Refresh</button>
+      <button class="btn btn-rd btn-sm" onclick="clearAll()">🗑 Clear All</button>
+    </div>
+    <div class="card">
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Faculty</th><th>Designation</th><th>Subject</th><th>Curriculum</th><th>Assigned On</th><th>Action</th></tr></thead>
+          <tbody id="assignTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMETABLE -->
+  <div class="pg" id="pg-timetable">
+    <div class="pg-title">Timetable</div>
+    <div class="pg-sub">Build the weekly schedule. Filter by faculty to highlight their slots.</div>
+    <div class="tt-ctrls">
+      <select class="tt-flt" id="ttFilter" onchange="renderTimetable()">
+        <option value="">— All Faculty —</option>
+      </select>
+      <select class="tt-flt" id="ttProgramFilter" onchange="updateYearSectionFilters(); renderTimetable()">
+        <option value="">— All Programs —</option>
+        <option value="UG">UG</option>
+        <option value="PG">PG</option>
+      </select>
+      <select class="tt-flt" id="ttSectionFilter" onchange="updateYearFilter(); renderTimetable()">
+        <option value="">— All Sections —</option>
+      </select>
+      <select class="tt-flt" id="ttYearFilter" onchange="renderTimetable()">
+        <option value="">— All Years —</option>
+      </select>
+      <button class="btn btn-gol" onclick="autoFill()">⚡ Auto Fill</button>
+      <button class="btn btn-bl btn-sm" onclick="exportTT()">⬇ Export CSV</button>
+      <button class="btn btn-rd btn-sm" onclick="clearTT()">🗑 Clear</button>
+    </div>
+    <div class="card">
+      <div class="cb" id="ttTableContainer"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- SLOT MODAL -->
+<div class="moverlay" id="slotModal">
+  <div class="modal">
+    <h3>📅 Assign Timetable Slot</h3>
+    <input type="hidden" id="slotTtKey"/>
+    <input type="hidden" id="slotDay"/>
+    <input type="hidden" id="slotPeriod"/>
+    <div class="fg">
+      <label>Faculty → Subject</label>
+      <select id="slotSelect"><option value="">— Choose an assignment —</option></select>
+    </div>
+    <div class="mfoot">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-bl" onclick="saveSlot()">Assign Slot</button>
+    </div>
+  </div>
+</div>
+
+<!-- ALTERNATIVE ASSIGN MODAL -->
+<div class="moverlay" id="assignModal">
+  <div class="modal">
+    <h3>➕ Assign Alternative Subject</h3>
+    <p class="pg-sub" style="margin-bottom: 12px;" id="assignModalSub"></p>
+    <input type="hidden" id="assignModalFacultyId"/>
+    <input type="hidden" id="assignModalFacultyName"/>
+    <div class="fg">
+      <label>Select Available Subject</label>
+      <select id="assignModalSelect">
+        <option value="">— Choose a subject —</option>
+      </select>
+    </div>
+    <div class="mfoot">
+      <button class="btn-cancel" onclick="closeAssignModal()">Cancel</button>
+      <button class="btn btn-bl" onclick="saveAlternativeAssignment()">Assign Subject</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Session validation - redirect to login if not authenticated
+if (sessionStorage.getItem('portal_role') !== 'coordinator') {
+  window.location.href = 'index.html';
+}
+
+// ── KEYS ──
+const KT  = 'teachers_data';
+const KA  = 'coord_assignments';   // shared: teacher portal reads this
+const KTT = 'coord_timetable';     // shared: teacher portal reads this
+
+const WORKLOAD = {
+  'professor':12,'professor (part time)':8,
+  'associate professor':14,'associate professor (part time)':9,
+  'assistant professor (sc)':16,'assistant professor (sc-part time)':9,
+  'assistant professor (ss)':16,'assistant professor (ss-part time)':9
+};
+const DAYS    = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+const PERIODS = ['8:30–9:20','9:20–10:10','10:30–11:20','11:20–12:00','1:00–1:50','1:50–2:40'];
+
+// ── STORAGE ──
+const sg = (k,d) => { try{const r=localStorage.getItem(k);return r?JSON.parse(r):d;}catch{return d;} };
+const ss = (k,v) => { try{localStorage.setItem(k,JSON.stringify(v));}catch{} };
+
+let mongoTeachers = [];
+let mongoSyllabus = [];
+
+function flattenSyllabusSubjects(subjectDocs) {
+  if (!Array.isArray(subjectDocs)) return [];
+  const rows = [];
+  subjectDocs.forEach(subj => {
+    if (Array.isArray(subj.options) && subj.options.length > 0) {
+      subj.options.forEach(option => {
+        const flattened = { ...subj, ...option };
+        delete flattened.options;
+        rows.push(flattened);
+      });
+    } else {
+      rows.push(subj);
+    }
+  });
+  return rows;
+}
+
+function cleanOrphans() {
+  const teachers = getTeachers();
+  const assigns = getAssignments();
+  if (!assigns.length) return;
+
+  const validIds = new Set(teachers.map(t => fid(t)));
+  const validNames = new Set(teachers.map(t => t.name));
+
+  const validAssigns = assigns.filter(a => validIds.has(a.facultyId) || validNames.has(a.facultyName));
+  if (validAssigns.length !== assigns.length) {
+    saveAssign(validAssigns);
+    
+    const tt = getTT();
+    let changed = false;
+    Object.keys(tt).forEach(ttKey => {
+      Object.keys(tt[ttKey] || {}).forEach(day => {
+        if (['Monday','Tuesday','Wednesday','Thursday','Friday'].includes(day)) {
+          Object.keys(tt[ttKey][day] || {}).forEach(period => {
+            const slot = tt[ttKey][day][period];
+            if (slot && !validIds.has(slot.facultyId) && !validNames.has(slot.facultyName)) {
+              delete tt[ttKey][day][period];
+              changed = true;
+            }
+          });
+        } else {
+          if (tt[ttKey]?.facultyId && !validIds.has(tt[ttKey].facultyId) && !validNames.has(tt[ttKey].facultyName)) { delete tt[ttKey]; changed=true; }
+        }
+      });
+    });
+    if (changed) saveTT(tt);
+  }
+}
+
+async function fetchBackendData() {
+  try {
+    const tRes = await fetch('http://localhost:5000/api/teachers');
+    if(tRes.ok) mongoTeachers = await tRes.json();
+    
+    const sRes = await fetch('http://localhost:5000/api/syllabus');
+    if(sRes.ok) {
+      const rawSyllabus = await sRes.json();
+      mongoSyllabus = flattenSyllabusSubjects(rawSyllabus);
+    }
+  } catch(e) {
+    console.warn('Backend unavailable, using localStorage', e);
+  }
+  cleanOrphans();
+  renderAll();
+}
+
+function getPreferencesState() {
+  return localStorage.getItem('preferences_open') !== 'false';
+}
+function updateToggleBtn() {
+  const isOpen = getPreferencesState();
+  const btn = document.getElementById('togglePrefBtn');
+  if (btn) {
+    btn.className = isOpen ? 'btn btn-gn' : 'btn btn-rd';
+    btn.innerHTML = isOpen ? '🔓 Status: OPEN (Click to Close)' : '🔒 Status: CLOSED (Click to Open)';
+  }
+}
+function togglePreferences() {
+  const isOpen = getPreferencesState();
+  localStorage.setItem('preferences_open', (!isOpen).toString());
+  updateToggleBtn();
+  alert(`Faculty subject preferences are now ${!isOpen ? 'OPEN' : 'CLOSED'}.`);
+}
+
+const getTeachers    = ()  => mongoTeachers.length > 0 ? mongoTeachers : sg(KT,[]);
+const getAssignments = ()  => sg(KA,[]);
+const saveAssign     = (d) => ss(KA,d);
+const getTT          = ()  => sg(KTT,{});
+const saveTT         = (d) => ss(KTT,d);
+const getRejections  = ()  => sg('coord_rejections', []);
+const saveRejections = (d) => ss('coord_rejections', d);
+
+// Faculty unique ID
+const fid = (t) => (t.email&&t.email.trim()) ? t.email.trim() : t.name.trim();
+
+function getWorkloadHours(teacher) {
+  if (teacher && teacher.workingHours) return teacher.workingHours;
+  if (!teacher || !teacher.designation) return 16;
+  return WORKLOAD[(teacher.designation||'').toLowerCase()] || 16;
+}
+
+function getAssignedHours(facultyId) {
+  const assigns = getAssignForFaculty(facultyId);
+  const allSubs = getAllSubjects();
+  return assigns.reduce((sum, a) => {
+    let sub = allSubs.find(s => s.key === a.subjectKey);
+    if (!sub) sub = allSubs.find(s => s.name === a.subjectName);
+    return sum + (sub ? (sub.tch || 1) : 1);
+  }, 0);
+}
+
+function getRemainingHours(facultyId) {
+  const teacher = getTeachers().find(t => fid(t) === facultyId);
+  return Math.max(0, getWorkloadHours(teacher) - getAssignedHours(facultyId));
+}
+
+function getFuzzyVal(obj, keys) {
+  const normalizedObj = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (typeof k === 'string') normalizedObj[k.toLowerCase().replace(/[^a-z0-9]/g, '')] = v;
+  }
+  for (let k of keys) {
+    if (normalizedObj[k] !== undefined && normalizedObj[k] !== null && normalizedObj[k] !== '') return normalizedObj[k];
+  }
+  return null;
+}
+
+// Get all available subjects from curriculum
+function getAllSubjects() {
+  const allSubs = [];
+  
+  if (mongoSyllabus.length > 0) {
+    mongoSyllabus.forEach(s => {
+      const subjName = getFuzzyVal(s, ['name', 'subjectname', 'coursename', 'subname', 'title', 'coursetitle', 'subjecttitle', 'subject']) || '-';
+      const program = getFuzzyVal(s, ['program', 'courseprogram']) || 'BCA A';
+      const semester = getFuzzyVal(s, ['semester', 'sem', 'semesterno']) || '1';
+      const yearNum = Math.ceil(parseInt(semester) / 2) || 1;
+      const year = `Y${yearNum}`;
+      const sectionStr = program.replace(' ', '_');
+      const ck = `${semester}_${sectionStr}_${year}`; 
+      const tchVal = getFuzzyVal(s, ['tch', 'c', 'credits', 'hours', 'credit']);
+      const tch = (!isNaN(Number(tchVal)) && Number(tchVal) > 0) ? Number(tchVal) : 1;
+      
+      allSubs.push({
+        key: ck + '::' + subjName,
+        name: subjName,
+        ck: ck,
+        program: program.split(' ')[0],
+        section: program,
+        year: year,
+        semester: semester.toString(),
+        specialization: s.specialization || 'N/A',
+          classType: program.startsWith('MCA') ? 'PG' : 'UG',
+          tch: tch
+      });
+    });
+    return allSubs;
+  }
+
+  const subjects = sg('curriculum_subjects', {});
+  Object.keys(subjects).sort().forEach(key => {
+    const parts = key.split('_');
+    const semester = parts[0];
+    const sectionPart1 = parts[1];
+    const sectionPart2 = parts[2];
+    const section = sectionPart1 + '_' + sectionPart2;
+    const year = parts[3] ? parts[3].replace('Y','') : '';
+    const spec = parts[4] ? parts[4].replace(/_/g,' ') : 'N/A';
+    const program = sectionPart1.startsWith('MCA') ? 'PG' : 'UG';
+
+    subjects[key].forEach(subject => {
+      allSubs.push({
+        key: key + '::' + subject,
+        name: subject,
+        ck: key,
+        program,
+        section: section.replace('_', ' '),
+        year,
+        semester,
+        specialization: spec,
+          classType: program,
+          tch: 1
+      });
+    });
+  });
+  return allSubs;
+}
+
+// All preferred subjects for a teacher (with per-subject preference numbers)
+function getPrefs(teacher) {
+  const out = [];
+  (teacher.classes||[]).forEach(cls => {
+    const sectionStr = (cls.section || '').replace(' ', '_');
+    let ck = `${cls.semester}_${sectionStr}_${cls.year}`;
+    if (cls.classType==='UG'&&cls.year==='Y3'&&cls.specialization) ck+='_'+cls.specialization;
+
+    // use subjectPreferences (new format) if available, fallback to subjects array
+    if (cls.subjectPreferences && cls.subjectPreferences.length) {
+      cls.subjectPreferences.forEach(sp => {
+        out.push({
+          key: ck+'::'+sp.name, name: sp.name,
+          preference: sp.preference || 1,
+          ck, classType: cls.classType,
+          section: cls.section, year: cls.year, semester: cls.semester
+        });
+      });
+    } else {
+      (cls.subjects||[]).forEach((subj, idx) => {
+        const subjName = typeof subj === 'string' ? subj : subj.subject;
+        out.push({
+          key: ck+'::'+subjName, name: subjName,
+          preference: idx + 1,
+          ck, classType: cls.classType,
+          section: cls.section, year: cls.year, semester: cls.semester
+        });
+      });
+    }
+  });
+  out.sort((a,b) => a.preference - b.preference);
+  return out;
+}
+
+const getAssignForSubj  = (sk)  => getAssignments().find(a=>a.subjectKey===sk)||null;
+const getAssignForFaculty = (id)  => getAssignments().filter(a=>a.facultyId===id);
+
+// Escape for inline onclick attrs
+const ek = (s) => (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+
+// ── PAGE SWITCH ──
+function showPage(id,el) {
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  const target = document.getElementById('pg-'+id);
+  if (!target) {
+    console.warn('showPage: missing page', id);
+    return;
+  }
+  target.classList.add('active');
+  el.classList.add('active');
+  try {
+    fetchBackendData();
+  } catch (e) {
+    console.error('fetchBackendData failed', e);
+  }
+}
+
+window.logout = function() {
+  sessionStorage.clear();
+  window.location.replace('index.html');
+};
+
+// Auto-logout on back button press
+window.addEventListener('popstate', function(event) {
+  // Clear session and redirect to login when back button is pressed
+  sessionStorage.clear();
+  window.history.replaceState(null, null, 'index.html');
+  window.location.href = 'index.html';
+});
+
+// Prevent adding to history when page loads (so back button works)
+window.history.replaceState(null, null, window.location.href);
+
+
+
+function renderAll() {
+  renderDashboard();
+  renderCatalog();
+  renderPreferences();
+  renderAssignments();
+  renderTimetable();
+  populateFilter();
+  updateYearSectionFilters();
+  updateToggleBtn();
+}
+
+// ── DASHBOARD ──
+function renderDashboard() {
+  const teachers = getTeachers();
+  const assigns  = getAssignments();
+  const allKeys  = new Set();
+  teachers.forEach(t=>getPrefs(t).forEach(s=>allKeys.add(s.key)));
+  const unassigned = [...allKeys].filter(k=>!getAssignForSubj(k)).length;
+
+  document.getElementById('dashStats').innerHTML = `
+    <div class="stat"><div class="sl">Faculty</div><div class="sv">${teachers.length}</div></div>
+    <div class="stat o"><div class="sl">Total Subjects</div><div class="sv">${allKeys.size}</div></div>
+    <div class="stat g"><div class="sl">Assigned</div><div class="sv">${assigns.length}</div></div>
+    <div class="stat r"><div class="sl">Unassigned</div><div class="sv">${unassigned}</div></div>`;
+
+  document.getElementById('dashTable').innerHTML = !teachers.length
+    ? `<tr><td colspan="5" class="empty">No teacher submissions yet.</td></tr>`
+    : teachers.map(t => {
+        const id = fid(t);
+        const prefs   = getPrefs(t);
+        const myAssign = getAssignForFaculty(id);
+        const pending  = prefs.filter(s=>!getAssignForSubj(s.key)).length;
+        const workload = getWorkloadHours(t);
+        return `<tr>
+          <td><strong>${t.name}</strong></td>
+          <td><span class="badge bg">${t.designation||'—'} · ${workload} hrs</span></td>
+          <td>${prefs.length}</td>
+        <td><span class="badge gg">${myAssign.length} subj (${getAssignedHours(id)} hrs)</span></td>
+          <td>${pending>0?`<span class="badge go">${pending} pending</span>`:`<span class="badge gg">✓ Done</span>`}</td>
+        </tr>`;
+      }).join('');
+}
+
+// ── SUBJECT CATALOG ──
+function updateCatSemester() {
+  const prog = document.getElementById('catProgram').value;
+  const semSelect = document.getElementById('catSemester');
+  semSelect.innerHTML = '<option value="">— Semester —</option>';
+  if (!prog) return;
+
+  const isBCA = prog.startsWith('BCA');
+  semSelect.innerHTML += '<option value="all">All Semesters</option>';
+  const maxSem = isBCA ? 6 : 4;
+  for (let i = 1; i <= maxSem; i++) {
+    semSelect.innerHTML += `<option value="${i}">Semester ${i}</option>`;
+  }
+  renderCatalog();
+}
+
+function renderCatalog() {
+  const tbody = document.getElementById('catalogTable');
+  if (!tbody) return;
+
+  const progSec = document.getElementById('catProgram')?.value;
+  const sem = document.getElementById('catSemester')?.value;
+  const allAssigns = getAssignments();
+
+  if (!progSec) {
+     tbody.innerHTML = '<tr><td colspan="7" class="empty">Please select Program & Section to view catalog.</td></tr>';
+     document.getElementById('catCount').textContent = '0 subjects';
+     return;
+  }
+
+  const baseProg = progSec.split(' ')[0].toUpperCase();
+  const sectionStr = progSec.replace(' ', '_');
+  const showAllSemesters = sem === 'all' || !sem;
+
+  const filtered = mongoSyllabus.filter(s => {
+     const sProg = (s.program || s.Program || s.courseProgram || '').toUpperCase();
+     const sSem = (s.semester || s.sem || s.semesterNo || '').toString();
+     const programMatches = sProg === baseProg || sProg.startsWith(baseProg + ' ');
+     return programMatches && (showAllSemesters ? true : sSem === sem);
+  });
+
+  document.getElementById('catCount').textContent = `${filtered.length} subjects`;
+
+  if (filtered.length === 0) {
+     tbody.innerHTML = '<tr><td colspan="7" class="empty">No subjects found for this selection.</td></tr>';
+     return;
+  }
+
+  tbody.innerHTML = filtered.map(row => {
+    const subjCode = getFuzzyVal(row, ['code', 'subjectcode', 'coursecode', 'subcode', 'subjectid', 'courseid']) || row._id || '-';
+    const subjName = getFuzzyVal(row, ['name', 'subjectname', 'coursename', 'subname', 'title', 'coursetitle', 'subjecttitle', 'subject']) || '-';
+    const category = getFuzzyVal(row, ['category', 'coursecategory', 'type', 'coursetype']) || 'Core';
+    const tch = getFuzzyVal(row, ['tch', 'c', 'credits', 'hours', 'credit']) || '-';
+    const actualSem = getFuzzyVal(row, ['semester', 'sem', 'semesterno']) || '-';
+
+    const isAllocated = allAssigns.some(a => 
+      a.subjectName === subjName && 
+      a.curriculumKey && 
+      a.curriculumKey.includes(sectionStr) && 
+      a.curriculumKey.startsWith(String(actualSem) + '_')
+    );
+    const badgeClass = isAllocated ? 'gg' : 'go';
+    const badgeText = isAllocated ? 'Allocated' : 'Unallocated';
+
+    return `<tr>
+      <td><strong style="color:var(--bm)">${subjCode}</strong></td>
+      <td><strong>${subjName}</strong></td>
+      <td style="color:var(--mu);font-size:.8rem">${category}</td>
+      <td>${progSec}</td>
+      <td>Semester ${actualSem}</td>
+      <td><strong>${tch}</strong></td>
+      <td><span class="badge ${badgeClass}">${badgeText}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── FACULTY PREFERENCES ──
+function renderPreferences() {
+  const teachers = getTeachers();
+  const allSubjects = getAllSubjects();
+  const el = document.getElementById('prefContainer');
+  if (!teachers.length) { el.innerHTML=`<div class="empty">No teacher submissions found.</div>`; return; }
+
+  el.innerHTML = teachers.map(t => {
+    const id    = fid(t);
+    const prefs = getPrefs(t);
+    const myA   = getAssignForFaculty(id);
+    const workload = getWorkloadHours(t);
+    const assignedHours = getAssignedHours(id);
+    const remaining = Math.max(0, workload - assignedHours);
+
+    // Get available subjects (not already assigned to anyone)
+    const availableSubjects = allSubjects.filter(s => !getAssignForSubj(s.key));
+
+    const canAssignMore = remaining > 0;
+    const altAssigns = myA.filter(a => !prefs.some(p => p.key === a.subjectKey));
+
+    let prefCards = '';
+    if (!prefs.length && !altAssigns.length) {
+      prefCards = `<p class="no-pref">No subjects submitted by this faculty.</p>`;
+    } else {
+      const pCards = prefs.map(s => {
+          let subInfo = allSubjects.find(sub => sub.key === s.key);
+          if (!subInfo) subInfo = allSubjects.find(sub => sub.name === s.name);
+          const tch = subInfo ? (subInfo.tch || 1) : 1;
+
+          const existing = getAssignForSubj(s.key);
+          const isMine   = existing && existing.facultyId === id;
+          const isOther  = existing && existing.facultyId !== id;
+          const rejections = getRejections();
+          const isRejected = rejections.some(r => r.facultyId === id && r.subjectKey === s.key);
+
+          let action;
+          if (isMine) {
+            action = `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><button class="btn-asgn" disabled style="background:var(--gn);opacity:1;cursor:default;">✓ Assigned</button><button class="btn-rmv" onclick="removeAssign('${ek(existing.id)}')">✕ Remove</button></div>`;
+          } else if (isOther) {
+            action = `<span class="badge gz" style="font-size:.7rem;white-space:nowrap">Taken by<br>${existing.facultyName}</span>`;
+          } else if (isRejected) {
+            action = `<button class="btn-sm" style="background:#f0f2f4;color:#6b7e94;border:1px solid #dde5ef;border-radius:7px;cursor:pointer;" onclick="undoRejectPref('${ek(id)}', '${ek(s.key)}')">↺ Undo Reject</button>`;
+          } else {
+            action = `<div style="display:flex;flex-direction:row;gap:6px;align-items:center;"><button class="btn-asgn" style="background:var(--gn);" onclick="doAssign('${ek(id)}','${ek(s.key)}','${ek(t.name)}','${ek(s.name)}','${ek(s.ck)}','${ek(s.classType)}')">✓ Accept</button><button class="btn-rmv" onclick="rejectPref('${ek(id)}', '${ek(s.key)}')">✕ Reject</button></div>`;
+          }
+
+          return `<div class="psc ${isMine?'done':isOther?'taken':isRejected?'taken':''}">
+            <div class="pi">
+              <div class="pi-name" style="${isRejected ? 'text-decoration:line-through;color:#999;' : ''}">
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:${isMine?'var(--gn)':isOther?'#bbb':isRejected?'#ccc':'var(--bm)'};color:#fff;font-size:.72rem;font-weight:700;margin-right:7px;flex-shrink:0;vertical-align:middle;">${s.preference}</span>${s.name}
+              </div>
+              <div class="pi-curr">${s.ck.replace(/_/g,' ')} &nbsp;·&nbsp; ${s.classType} ${s.section.replace('_',' ')} &nbsp;·&nbsp; Year ${s.year.slice(1)} &nbsp;·&nbsp; ${s.semester} &nbsp;·&nbsp; <strong style="color:var(--bm);">${tch} hrs</strong></div>
+              ${isMine  ? `<div class="pi-status ok">✓ Assigned to ${t.name}</div>` : ''}
+              ${isOther ? `<div class="pi-status tak">Assigned to ${existing.facultyName}</div>` : ''}
+              ${isRejected ? `<div class="pi-status" style="color:#e74c3c;">❌ Rejected</div>` : ''}
+            </div>
+            ${action}
+          </div>`;
+        }).join('');
+
+      const aCards = altAssigns.map(a => {
+        let subInfo = allSubjects.find(sub => sub.key === a.subjectKey);
+        if (!subInfo) subInfo = allSubjects.find(sub => sub.name === a.subjectName);
+        const tch = subInfo ? (subInfo.tch || 1) : 1;
+
+        return `<div class="psc done">
+          <div class="pi">
+            <div class="pi-name">
+              <span title="Alternative Assignment" style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#9b59b6;color:#fff;font-size:.72rem;font-weight:700;margin-right:7px;flex-shrink:0;vertical-align:middle;">★</span>${a.subjectName}
+            </div>
+            <div class="pi-curr">${(a.curriculumKey || '').replace(/_/g,' ')} &nbsp;·&nbsp; ${a.classType || 'UG'} &nbsp;·&nbsp; <strong style="color:var(--bm);">${tch} hrs</strong></div>
+            <div class="pi-status ok">✓ Assigned (Alternative)</div>
+          </div>
+          <div style="display:flex;flex-direction:row;gap:6px;align-items:center;">
+            <button class="btn-asgn" disabled style="background:var(--gn);opacity:1;cursor:default;">✓ Assigned</button>
+            <button class="btn-rmv" onclick="removeAssign('${ek(a.id)}')">✕ Remove</button>
+          </div>
+        </div>`;
+      }).join('');
+
+      prefCards = pCards + aCards;
+    }
+
+    return `<div class="pfc">
+      <div class="pfc-hd">
+        <div>
+          <div class="pfc-name">${t.name}</div>
+          <div class="pfc-desig">${t.designation||'—'} &nbsp;·&nbsp; ${t.email||'No email'}</div>
+        </div>
+        <div style="text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;">
+          <span class="badge go">${prefs.length} preferred</span>
+        <span class="badge gg">${assignedHours} hrs assigned</span>
+          <span class="badge bg">${workload} hr cap</span>
+          <button class="btn btn-bl btn-sm" style="margin-left:0;" onclick="openAssignModal('${ek(id)}','${ek(t.name)}')">➕ Assign Alternative</button>
+          <button class="btn-rmv" onclick="removeFaculty('${ek(id)}')" style="font-size:.8rem;padding:4px 8px;margin-left:8px">🗑️ Remove Faculty</button>
+        </div>
+      </div>
+      <div class="pfc-bd">
+        <div style="margin-bottom:20px;">
+          <h4 style="color:var(--bd);font-size:1rem;margin-bottom:10px;">📋 Faculty Preferences (${prefs.length})${altAssigns.length > 0 ? ` <span style="color:#9b59b6;font-size:0.9rem;">+ ${altAssigns.length} Alternative</span>` : ''}</h4>
+          <div class="psg">${prefCards}</div>
+        </div>
+        <div style="border-top:1px solid var(--br); padding-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="color:${remaining===0?'#e74c3c':'#27ae60'};font-weight:700;margin-bottom:4px;">
+              Remaining assignable hours: ${remaining} / ${workload}
+            </div>
+            <div style="color:var(--mu);font-size:0.85rem;">You can assign an alternative subject if their preferences are unavailable.</div>
+          </div>
+          <button class="btn btn-bl" onclick="openAssignModal('${ek(id)}','${ek(t.name)}')">➕ Assign Alternative Subject</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function doAssign(facultyId, subjectKey, facultyName, subjectName, currKey, classType) {
+  const teacher = getTeachers().find(t => fid(t) === facultyId);
+  const allowed = getWorkloadHours(teacher);
+  const current = getAssignedHours(facultyId);
+
+  const allSubs = getAllSubjects();
+  let sub = allSubs.find(s => s.key === subjectKey);
+  if (!sub) sub = allSubs.find(s => s.name === subjectName);
+  const tch = sub ? (sub.tch || 1) : 1;
+
+  if (current + tch > allowed) {
+    if (!confirm(`Warning: Assigning this subject (${tch} hrs) will exceed the maximum workload of ${allowed} hours for ${teacher ? teacher.designation : 'this faculty'} (Current: ${current} hrs, New Total: ${current + tch} hrs). Proceed anyway?`)) {
+      return;
+    }
+  }
+  if (getAssignForSubj(subjectKey)) { alert('Already assigned.'); return; }
+  const list = getAssignments();
+  list.push({
+    id: 'a'+Date.now()+Math.random().toString(36).slice(2,5),
+    facultyId, facultyName, subjectKey, subjectName,
+    curriculumKey: currKey,
+    classType: classType || 'UG',
+    assignedAt: new Date().toISOString()
+  });
+  saveAssign(list);
+  renderAll();
+}
+
+function rejectPref(facultyId, subjectKey) {
+  const list = getRejections();
+  list.push({ facultyId, subjectKey });
+  saveRejections(list);
+  renderAll();
+}
+
+function undoRejectPref(facultyId, subjectKey) {
+  const list = getRejections().filter(r => !(r.facultyId === facultyId && r.subjectKey === subjectKey));
+  saveRejections(list);
+  renderAll();
+}
+
+function openAssignModal(facultyId, facultyName) {
+  document.getElementById('assignModalFacultyId').value = facultyId;
+  document.getElementById('assignModalFacultyName').value = facultyName;
+  document.getElementById('assignModalSub').textContent = `Assigning a new subject to ${facultyName}`;
+
+  const assignedKeys = new Set(getAssignments().map(a => a.subjectKey));
+  const available = getAllSubjects().filter(s => !assignedKeys.has(s.key));
+
+  document.getElementById('assignModalSelect').innerHTML =
+    '<option value="">— Choose a subject —</option>' +
+    available.map(s => `<option value="${s.key}">${s.name} (${s.ck.replace(/_/g, ' ')}) — ${s.tch} hrs</option>`).join('');
+
+  document.getElementById('assignModal').classList.add('open');
+}
+
+function closeAssignModal() {
+  document.getElementById('assignModal').classList.remove('open');
+}
+
+function saveAlternativeAssignment() {
+  const facultyId = document.getElementById('assignModalFacultyId').value;
+  const facultyName = document.getElementById('assignModalFacultyName').value;
+  const subjectKey = document.getElementById('assignModalSelect').value;
+
+  if (!subjectKey) { alert('Please select a subject.'); return; }
+
+  const subject = getAllSubjects().find(s => s.key === subjectKey);
+  if (subject) {
+    doAssign(facultyId, subject.key, facultyName, subject.name, subject.ck, subject.classType);
+    closeAssignModal();
+  }
+}
+
+function findBestAvailableSubject(availableSubjects, teacher, assignedKeys) {
+  const sameSection = availableSubjects.find(s => s.section.replace(' ','_') === teacher.classes?.[0]?.section && !assignedKeys.has(s.key));
+  if (sameSection) return sameSection;
+  const sameProgram = availableSubjects.find(s => s.program === (teacher.classes?.[0]?.classType || 'UG') && !assignedKeys.has(s.key));
+  if (sameProgram) return sameProgram;
+  return availableSubjects.find(s => !assignedKeys.has(s.key)) || null;
+}
+
+function balanceLoad() {
+  const teachers = getTeachers();
+  let assignments = getAssignments();
+  const assignedKeys = new Set(assignments.map(a => a.subjectKey));
+  const availableSubjects = getAllSubjects().filter(s => !assignedKeys.has(s.key));
+
+  if (!availableSubjects.length) {
+    alert('No available subjects remain to balance.');
+    return;
+  }
+
+  const teacherQueue = teachers.map(t => {
+    const id = fid(t);
+    const workload = getWorkloadHours(t);
+    const assigned = getAssignedHours(id);
+    return { teacher: t, id, workload, assigned, remaining: Math.max(0, workload - assigned) };
+  }).filter(item => item.remaining > 0)
+    .sort((a,b) => b.remaining - a.remaining || a.assigned - b.assigned);
+
+  let assignedCount = 0;
+  teacherQueue.forEach(item => {
+    while (item.remaining > 0) {
+      const next = findBestAvailableSubject(availableSubjects, item.teacher, assignedKeys);
+      if (!next) break;
+      assignments.push({
+        id: 'a'+Date.now()+Math.random().toString(36).slice(2,5),
+        facultyId: item.id,
+        facultyName: item.teacher.name,
+        subjectKey: next.key,
+        subjectName: next.name,
+        curriculumKey: next.ck,
+        classType: next.classType,
+        assignedAt: new Date().toISOString()
+      });
+      assignedKeys.add(next.key);
+      assignedCount += 1;
+      item.remaining -= (next.tch || 1);
+      item.assigned += (next.tch || 1);
+    }
+  });
+
+  if (!assignedCount) {
+    alert('No assignments were added. Either all teachers are at capacity or no unassigned subjects remain.');
+    return;
+  }
+
+  saveAssign(assignments);
+  renderAll();
+  alert(`Balanced load by assigning ${assignedCount} subject${assignedCount === 1 ? '' : 's'}.`);
+}
+
+// ── ALL ASSIGNMENTS TABLE ──
+function renderAssignments() {
+  const list     = getAssignments();
+  const teachers = getTeachers();
+  const tbody    = document.getElementById('assignTable');
+  if (!list.length) {
+    tbody.innerHTML=`<tr><td colspan="6" class="empty">No assignments yet. Use Faculty Preferences to assign.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(a => {
+    const t     = teachers.find(t=>fid(t)===a.facultyId);
+    const desig = t ? t.designation : '—';
+    return `<tr>
+      <td><strong>${a.facultyName}</strong></td>
+      <td><span class="badge bg">${desig}</span></td>
+      <td>${a.subjectName}</td>
+      <td><code style="background:#f0f4f9;padding:2px 7px;border-radius:5px;font-size:.76rem">${(a.curriculumKey||'').replace(/_/g,' ')}</code></td>
+      <td style="color:var(--mu);font-size:.82rem">${new Date(a.assignedAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</td>
+      <td><button class="btn btn-rd btn-sm" onclick="removeAssign('${ek(a.id)}')">Remove</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function removeAssign(id) {
+  if (!confirm('Remove this assignment? It will disappear from the faculty portal too.')) return;
+  saveAssign(getAssignments().filter(a=>a.id!==id));
+  // clean timetable slots that used this assignment
+  const tt = getTT();
+  let changed = false;
+  Object.keys(tt).forEach(ttKey=>{
+    Object.keys(tt[ttKey]||{}).forEach(day=>{
+      if (['Monday','Tuesday','Wednesday','Thursday','Friday'].includes(day)) {
+        Object.keys(tt[ttKey][day]||{}).forEach(period=>{
+          if (tt[ttKey][day][period]?.assignmentId===id) { delete tt[ttKey][day][period]; changed=true; }
+        });
+      } else {
+        if (tt[ttKey]?.assignmentId===id) { delete tt[ttKey]; changed=true; }
+      }
+    });
+  });
+  if (changed) saveTT(tt);
+  renderAll();
+}
+
+async function removeFaculty(facultyId) {
+  if (!confirm('Remove this faculty and all their assignments? This will also clear their timetable slots.')) return;
+  
+  const teacher = getTeachers().find(t => fid(t) === facultyId);
+  const codeToDelete = teacher ? (teacher.code || teacher.email || teacher.name) : facultyId;
+
+  // Remove from teachers_data
+  const teachers = getTeachers().filter(t => fid(t) !== facultyId);
+  localStorage.setItem('teachers_data', JSON.stringify(teachers));
+  
+  // Remove temporary submission data if it exists
+  const tempData = JSON.parse(localStorage.getItem('teacher_submission_temp') || 'null');
+  if (tempData && (tempData.email === facultyId || tempData.name === facultyId)) {
+    localStorage.removeItem('teacher_submission_temp');
+  }
+  
+  // Remove all assignments for this faculty
+  const assignments = getAssignments().filter(a => a.facultyId !== facultyId);
+  saveAssign(assignments);
+  
+  // Clean timetable slots that used assignments from this faculty
+  const tt = getTT();
+  let changed = false;
+  Object.keys(tt).forEach(ttKey => {
+    Object.keys(tt[ttKey] || {}).forEach(day => {
+      if (['Monday','Tuesday','Wednesday','Thursday','Friday'].includes(day)) {
+        Object.keys(tt[ttKey][day] || {}).forEach(period => {
+          if (tt[ttKey][day][period]?.facultyId === facultyId) {
+            delete tt[ttKey][day][period];
+            changed = true;
+          }
+        });
+      }
+    });
+  });
+  if (changed) saveTT(tt);
+  
+  // Remove from backend
+  try {
+    await fetch(`http://localhost:5000/api/teachers/${codeToDelete}`, { method: 'DELETE' });
+  } catch (e) { console.error('Failed to delete from backend', e); }
+
+  fetchBackendData();
+}
+
+async function clearAll() {
+  if (!confirm('Clear ALL data: teacher submissions, assignments, and timetable? This will reset everything.')) return;
+  localStorage.removeItem('teachers_data');
+  saveAssign([]);
+  saveTT({});
+  try {
+    await fetch('http://localhost:5000/api/teachers', { method: 'DELETE' });
+  } catch(e) {}
+  fetchBackendData();
+}
+
+// ── TIMETABLE ──
+function populateFilter() {
+  const sel = document.getElementById('ttFilter');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— All Faculty —</option>' +
+    getTeachers().map(t=>`<option value="${ek(fid(t))}"${fid(t)===cur?' selected':''}>${t.name}</option>`).join('');
+}
+
+function updateYearSectionFilters() {
+  const program = document.getElementById('ttProgramFilter').value;
+  const sectionSel = document.getElementById('ttSectionFilter');
+  const yearSel = document.getElementById('ttYearFilter');
+  let sections = [];
+  let years = [];
+  if (program === 'UG') {
+    sections = ['BCA_A', 'BCA_B', 'BCA_C'];
+    years = ['Y1', 'Y2', 'Y3'];
+  } else if (program === 'PG') {
+    sections = ['MCA_A', 'MCA_B'];
+    years = ['Y1', 'Y2'];
+  } else {
+    sections = ['BCA_A', 'BCA_B', 'BCA_C', 'MCA_A', 'MCA_B'];
+    years = ['Y1', 'Y2', 'Y3'];
+  }
+  sectionSel.innerHTML = '<option value="">— All Sections —</option>' +
+    sections.map(s => `<option value="${s}">${s.replace('_', ' ')}</option>`).join('');
+  yearSel.innerHTML = '<option value="">— All Years —</option>' +
+    years.map(y => `<option value="${y}">${y.replace('Y', '')} Year</option>`).join('');
+  // Reset selections
+  sectionSel.value = '';
+  yearSel.value = '';
+}
+
+function updateYearFilter() {
+  const section = document.getElementById('ttSectionFilter').value;
+  const yearSel = document.getElementById('ttYearFilter');
+  let years = ['Y1', 'Y2', 'Y3'];
+  if (section.startsWith('MCA')) {
+    years = ['Y1', 'Y2'];
+  }
+  yearSel.innerHTML = '<option value="">— All Years —</option>' +
+    years.map(y => `<option value="${y}">${y.replace('Y', '')} Year</option>`).join('');
+  yearSel.value = '';
+}
+
+function renderTimetable() {
+  const tt         = getTT();
+  if (tt['Monday'] && !tt['Monday']['8:30–9:20']) Object.keys(tt).forEach(k => delete tt[k]);
+
+  const filter     = document.getElementById('ttFilter')?.value||'';
+  const program    = document.getElementById('ttProgramFilter')?.value||'';
+  const section    = document.getElementById('ttSectionFilter')?.value||'';
+  const year       = document.getElementById('ttYearFilter')?.value||'';
+  
+  const container = document.getElementById('ttTableContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const grids = [];
+  const programs = program ? [program] : ['UG', 'PG'];
+  
+  programs.forEach(prog => {
+    let sections = prog === 'UG' ? ['BCA A', 'BCA B', 'BCA C'] : ['MCA A', 'MCA B'];
+    let years = prog === 'UG' ? ['Y1', 'Y2', 'Y3'] : ['Y1', 'Y2'];
+
+    if (section) sections = [section.replace('_', ' ')];
+    if (year) years = [year];
+
+    sections.forEach(sec => {
+      years.forEach(yr => grids.push({ program: prog, section: sec, year: yr, key: `${sec} - ${yr}` }));
+    });
+  });
+
+  grids.forEach(grid => {
+    const ttKey = grid.key;
+    const gridData = tt[ttKey] || {};
+
+    const tableWrap = document.createElement('div');
+    tableWrap.style.marginBottom = '30px';
+    tableWrap.innerHTML = `<h3 style="margin-bottom:10px; color:var(--bd); font-family:'Playfair Display',serif;">${ttKey}</h3>
+                           <div class="tt-wrap"><table class="tt-tbl" id="ttTbl_${ttKey.replace(/\s+/g,'_')}"></table></div>`;
+
+    const header = '<tr><th>Day / Period</th>'+PERIODS.map(p=>`<th>${p}</th>`).join('')+'</tr>';
+    const body = DAYS.map(day => {
+      const cells = PERIODS.map(period => {
+        const slot = gridData[day]?.[period];
+        if (slot) {
+          const isFacultyMatch = !filter || slot.facultyId===filter;
+          const faded = filter && !isFacultyMatch;
+          const inner = `<div class="tts${isFacultyMatch?' hl':''}" style="${faded?'opacity:.25':''}">
+            <button class="tts-rm" onclick="removeSlot('${ek(ttKey)}','${ek(day)}','${ek(period)}')">✕</button>
+            <div class="sn">${slot.subjectName}</div>
+            <div class="st">${slot.facultyName}</div>
+            <div class="sc">${(slot.curriculumKey||'').replace(/_/g,' ')}</div>
+          </div>`;
+          return `<td>${inner}</td>`;
+        }
+        return `<td><button class="tt-add" onclick="openSlotModal('${ek(ttKey)}','${ek(day)}','${ek(period)}')">＋ Add</button></td>`;
+      }).join('');
+      return `<tr><td class="dc">${day}</td>${cells}</tr>`;
+    }).join('');
+    
+    tableWrap.querySelector('table').innerHTML = header + body;
+    container.appendChild(tableWrap);
+  });
+}
+
+function openSlotModal(ttKey, day, period) {
+  document.getElementById('slotTtKey').value  = ttKey;
+  document.getElementById('slotDay').value    = day;
+  document.getElementById('slotPeriod').value = period;
+
+  const [secPart, yearPart] = ttKey.split(' - ');
+  const sectionUnderscore = secPart.replace(/ /g, '_');
+
+  document.getElementById('slotSelect').innerHTML =
+    '<option value="">— Choose —</option>' +
+    getAssignments()
+      .filter(a => {
+        const ckParts = (a.curriculumKey||'').split('_');
+        if (!ckParts.includes(sectionUnderscore) && !(a.curriculumKey||'').includes(sectionUnderscore)) return false;
+        if (!ckParts.includes(yearPart)) return false;
+        return true;
+      })
+      .map(a =>
+      `<option value="${a.id}">${a.facultyName}  →  ${a.subjectName}  (${(a.curriculumKey||'').replace(/_/g,' ')}) [${(a.classType||'UG')}]</option>`
+    ).join('');
+  document.getElementById('slotModal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('slotModal').classList.remove('open'); }
+
+function saveSlot() {
+  const ttKey  = document.getElementById('slotTtKey').value;
+  const day    = document.getElementById('slotDay').value;
+  const period = document.getElementById('slotPeriod').value;
+  const aId    = document.getElementById('slotSelect').value;
+  if (!aId) { alert('Please choose an assignment.'); return; }
+  const a = getAssignments().find(x=>x.id===aId);
+  if (!a) return;
+  const tt = getTT();
+  if (tt['Monday'] && !tt['Monday']['8:30–9:20']) Object.keys(tt).forEach(k => delete tt[k]);
+
+  if (!tt[ttKey]) tt[ttKey] = {};
+  if (!tt[ttKey][day]) tt[ttKey][day] = {};
+
+  let facultyConflict = null;
+  Object.keys(tt).forEach(key => {
+    if (tt[key] && tt[key][day] && tt[key][day][period]) {
+      if (tt[key][day][period].facultyId === a.facultyId) facultyConflict = key;
+    }
+  });
+
+  if (facultyConflict && facultyConflict !== ttKey) {
+    if (!confirm(`${a.facultyName} is already scheduled in ${facultyConflict} at this time. Are you sure you want to double-book them?`)) return;
+  }
+
+  tt[ttKey][day][period] = { assignmentId:a.id, facultyId:a.facultyId, facultyName:a.facultyName, subjectName:a.subjectName, curriculumKey:a.curriculumKey, subjectKey:a.subjectKey, classType: a.classType };
+  saveTT(tt);
+  closeModal();
+  renderTimetable();
+}
+
+function removeSlot(ttKey, day, period) {
+  const tt = getTT();
+  if (tt[ttKey] && tt[ttKey][day]) delete tt[ttKey][day][period];
+  saveTT(tt);
+  renderTimetable();
+}
+
+function clearTT() {
+  if (!confirm('Clear the entire timetable?')) return;
+  saveTT({});
+  renderTimetable();
+}
+
+function autoFill() {
+  const assigns = getAssignments();
+  if (!assigns.length) { alert('No assignments yet. Go to Faculty Preferences first.'); return; }
+  const tt = getTT();
+  if (tt['Monday'] && !tt['Monday']['8:30–9:20']) Object.keys(tt).forEach(k => delete tt[k]);
+
+  const facultyBusy = {}; 
+  Object.keys(tt).forEach(ttKey => {
+    DAYS.forEach(day => {
+      PERIODS.forEach(period => {
+         if (tt[ttKey] && tt[ttKey][day] && tt[ttKey][day][period]) {
+            facultyBusy[`${tt[ttKey][day][period].facultyId}_${day}_${period}`] = true;
+         }
+      });
+    });
+  });
+
+  assigns.forEach(a => {
+    const ckParts = (a.curriculumKey||'').split('_');
+    let secPart = '';
+    if ((a.curriculumKey||'').includes('BCA_A')) secPart = 'BCA A';
+    else if ((a.curriculumKey||'').includes('BCA_B')) secPart = 'BCA B';
+    else if ((a.curriculumKey||'').includes('BCA_C')) secPart = 'BCA C';
+    else if ((a.curriculumKey||'').includes('MCA_A')) secPart = 'MCA A';
+    else if ((a.curriculumKey||'').includes('MCA_B')) secPart = 'MCA B';
+    
+    let yearPart = ckParts.find(p => p.startsWith('Y')) || 'Y1';
+    if (!secPart) return; 
+    
+    const ttKey = `${secPart} - ${yearPart}`;
+    if (!tt[ttKey]) tt[ttKey] = {};
+
+    let sub = getAllSubjects().find(s => s.key === a.subjectKey) || getAllSubjects().find(s => s.name === a.subjectName);
+    const tch = sub ? (sub.tch || 1) : 1;
+    let assignedCount = 0;
+    
+    DAYS.forEach(day => { PERIODS.forEach(period => { if (tt[ttKey][day] && tt[ttKey][day][period] && tt[ttKey][day][period].assignmentId === a.id) assignedCount++; }); });
+
+    for (let day of DAYS) {
+      if (assignedCount >= tch) break;
+      if (!tt[ttKey][day]) tt[ttKey][day] = {};
+      for (let period of PERIODS) {
+        if (assignedCount >= tch) break;
+        if (!tt[ttKey][day][period] && !facultyBusy[`${a.facultyId}_${day}_${period}`]) {
+          tt[ttKey][day][period] = { assignmentId:a.id, facultyId:a.facultyId, facultyName:a.facultyName, subjectName:a.subjectName, curriculumKey:a.curriculumKey, subjectKey:a.subjectKey, classType: a.classType };
+          facultyBusy[`${a.facultyId}_${day}_${period}`] = true;
+          assignedCount++;
+        }
+      }
+    }
+  });
+
+  saveTT(tt);
+  renderTimetable();
+}
+
+function exportTT() {
+  const tt      = getTT();
+  const filter  = document.getElementById('ttFilter')?.value||'';
+  const program = document.getElementById('ttProgramFilter')?.value||'';
+  const section = document.getElementById('ttSectionFilter')?.value||'';
+  const year    = document.getElementById('ttYearFilter')?.value||'';
+  let csv = 'Class,Day,'+PERIODS.join(',')+'\n';
+
+  Object.keys(tt).forEach(ttKey => {
+    if (program && !ttKey.startsWith(program === 'UG' ? 'BCA' : 'MCA')) return;
+    if (section && !ttKey.includes(section.replace('_', ' '))) return;
+    if (year && !ttKey.includes(year)) return;
+
+    DAYS.forEach(day => {
+      const cells = PERIODS.map(p => {
+        const s = tt[ttKey][day]?.[p];
+        if(!s) return '-';
+        if(filter && s.facultyId!==filter) return '-';
+        return `"${s.subjectName} (${s.facultyName})"`;
+      });
+      if (cells.some(c => c !== '-')) {
+        csv += `"${ttKey}",${day},` + cells.join(',') + '\n';
+      }
+    });
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute('download', 'coordinator_timetable.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+
+fetchBackendData(); // Initial load
+// Automatically refresh data every 15 seconds to see new faculty submissions
+setInterval(fetchBackendData, 15000);
+</script>
+</body>
+</html>

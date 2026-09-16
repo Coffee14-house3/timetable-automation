@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Upload Syllabus</title>
+  <style>
+    body{font-family:Segoe UI,Arial,sans-serif;background:#f4f6f8;margin:0;padding:20px}
+    .card{max-width:600px;margin:24px auto;padding:20px;background:white;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+    h1{color:#333;margin-bottom:12px}
+    .note{font-size:0.9rem;color:#666;margin-top:8px}
+    label{display:block;margin:12px 0 6px;color:#333;font-weight:600}
+    input{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px}
+    button{margin-top:16px;padding:10px 16px;border:0;border-radius:6px;background:#667eea;color:#fff;font-weight:700;cursor:pointer}
+    a.download{display:inline-block;margin-top:8px;color:#667eea}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 id="heading">Syllabus upload</h1>
+    <p class="note" id="subInfo"></p>
+
+    <div id="existing"></div>
+
+    <label for="fileInput">Choose PDF or CSV file</label>
+    <input type="file" id="fileInput" accept=".pdf,.csv" />
+
+    <label for="weightage">Weightage (%)</label>
+    <input type="number" id="weightage" min="0" max="100" placeholder="e.g. 30" />
+
+    <label for="classroomLink">Google Classroom Link</label>
+    <input type="text" id="classroomLink" placeholder="https://classroom.google.com/..." />
+
+    <button id="saveBtn">Save</button>
+    <button id="removeBtn" style="background:#e74c3c;">Remove</button>
+    <p class="note">The file, weightage, and classroom link are stored locally in your browser storage. You can re-upload or remove them later.</p>
+  </div>
+
+  <script>
+    function qs(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
+    }
+    const key = qs('key') || '';
+    const subj = qs('subj') || '';
+    const storageKey = 'syllabus_' + encodeURIComponent(key) + '_' + encodeURIComponent(subj);
+
+    function render() {
+      document.getElementById('heading').textContent = subj ? 'Syllabus for "' + subj + '"' : 'Upload Syllabus';
+      document.getElementById('subInfo').textContent = key ? ('Curriculum key: ' + key) : '';
+      const existingDiv = document.getElementById('existing');
+      existingDiv.innerHTML = '';
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        try {
+          const obj = JSON.parse(raw);
+          if (obj.data) {
+            const a = document.createElement('a');
+            a.href = obj.data;
+            a.download = obj.name;
+            a.textContent = 'Download current file (' + obj.name + ')';
+            a.className = 'download';
+            existingDiv.appendChild(a);
+          }
+          // populate weightage and classroom link from storage
+          if (obj.weightage) document.getElementById('weightage').value = obj.weightage;
+          if (obj.classroomLink) document.getElementById('classroomLink').value = obj.classroomLink;
+          // show existing metadata
+          const info = document.createElement('div');
+          info.style.marginTop = '12px';
+          let html = '';
+          if (obj.weightage) html += '<p><strong>Weightage:</strong> ' + obj.weightage + '%</p>';
+          if (obj.classroomLink) html += '<p><strong>Classroom Link:</strong> <a href="' + obj.classroomLink + '" target="_blank">' + obj.classroomLink + '</a></p>';
+          if (html) info.innerHTML = html;
+          if (html) existingDiv.appendChild(info);
+        } catch (e) {
+          console.warn('invalid syllabus data', e);
+        }
+      }
+    }
+
+    document.getElementById('saveBtn').addEventListener('click', () => {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      const weightage = document.getElementById('weightage').value.trim();
+      const classroomLink = document.getElementById('classroomLink').value.trim();
+      
+      // allow saving metadata without file if data already exists
+      if (!file && !localStorage.getItem(storageKey)) {
+        alert('Please choose a file or load existing data first.');
+        return;
+      }
+      
+      // validate weightage if provided
+      if (weightage && (isNaN(weightage) || weightage < 0 || weightage > 100)) {
+        alert('Weightage must be between 0 and 100.');
+        return;
+      }
+
+      // if file provided, read and save it with metadata
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          const dataUrl = ev.target.result;
+          const obj = {
+            name: file.name,
+            type: file.type,
+            data: dataUrl,
+            weightage: weightage ? parseInt(weightage, 10) : null,
+            classroomLink: classroomLink || null
+          };
+          localStorage.setItem(storageKey, JSON.stringify(obj));
+          alert('Syllabus saved.');
+          render();
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // update only metadata for existing file
+        const raw = localStorage.getItem(storageKey);
+        if (raw) {
+          try {
+            const obj = JSON.parse(raw);
+            obj.weightage = weightage ? parseInt(weightage, 10) : null;
+            obj.classroomLink = classroomLink || null;
+            localStorage.setItem(storageKey, JSON.stringify(obj));
+            alert('Metadata updated.');
+            render();
+          } catch (e) {
+            console.warn('failed to update metadata', e);
+          }
+        }
+      }
+    });
+
+    document.getElementById('removeBtn').addEventListener('click', () => {
+      if (confirm('Remove stored syllabus for this subject?')) {
+        localStorage.removeItem(storageKey);
+        render();
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Interactive Resume</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #f4f6f9;
+    }
+    .profile {
+      text-align: center;
+      padding: 20px;
+    }
+    .profile img {
+      width: 120px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container mt-4">
+
+  <!-- Profile Section -->
+  <div class="card p-3 shadow">
+    <div class="profile">
+      
+      <h3 class="mt-2">Prathikaa </h3>
+      <p>Profession: full stack developer</p>
+
+      <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+          Contact Info
+        </button>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item">📧 email@example.com</a></li>
+          <li><a class="dropdown-item">📞 +91 9876543210</a></li>
+          <li><a class="dropdown-item">🌐 LinkedIn</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs Section -->
+  <ul class="nav nav-tabs mt-4" id="resumeTabs">
+    <li class="nav-item">
+      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#skills">Skills</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#education">Education</button>
+    </li>
+    <li class="nav-item">
+      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#projects">Projects</button>
+    </li>
+  </ul>
+
+  <div class="tab-content p-3 bg-white shadow">
+
+    <!-- Skills -->
+    <div class="tab-pane fade show active" id="skills">
+      <ul>
+        <li>Sales & Target Achievement</li>
+        <li>Customer Handling</li>
+        <li>Communication Skills</li>
+        <li>CRM Tools</li>
+      </ul>
+    </div>
+
+    <!-- Education -->
+    <div class="tab-pane fade" id="education">
+      <p>BCA - Bachelor of Computer Applications</p>
+      <p>Hindustan University</p>
+    </div>
+
+    <!-- Projects -->
+    <div class="tab-pane fade" id="projects">
+
+      <!-- Carousel -->
+      <div id="projectCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+
+          <div class="carousel-item active">
+            <div class="d-block w-100 p-4 bg-primary text-white">
+              <h5>Student Registration System</h5>
+              <p>React + Node.js project</p>
+            </div>
+          </div>
+
+          <div class="carousel-item">
+            <div class="d-block w-100 p-4 bg-success text-white">
+              <h5>Sales Dashboard</h5>
+              <p>Performance tracking system</p>
+            </div>
+          </div>
+
+        </div>
+
+        <button class="carousel-control-prev" data-bs-target="#projectCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon"></span>
+        </button>
+
+        <button class="carousel-control-next" data-bs-target="#projectCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon"></span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Experience Section -->
+  <div class="mt-4">
+    <h4>Experience</h4>
+
+    <!-- Collapse -->
+    <p>
+      <button class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#exp1">
+        Show Experience
+      </button>
+    </p>
+
+    <div id="exp1" class="collapse">
+      <div class="card card-body">
+        <h5>internship</h5>
+        <p>1 year internship in htc </p>
+        <ul>
+          <li>Achieved monthly targets</li>
+          <li>Handled customer queries</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

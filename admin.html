@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>HOD Login - Teachers Data</title>
+  <style>
+    body{font-family:Segoe UI,Arial,sans-serif;background:#f4f6f8;margin:0;padding:20px}
+    .card{max-width:1100px;margin:24px auto;padding:20px;background:white;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid #eee;text-align:left}
+    th{background:#f9fafb}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    button{padding:8px 12px;border:0;border-radius:6px;background:#667eea;color:#fff;cursor:pointer}
+    .danger{background:#e74c3c}
+    #tabTeachers,#tabSubjects,#tabAssignments{margin:0;border:0;border-bottom:3px solid transparent}
+    #tabTeachers.active{background:#667eea;border-bottom:3px solid #667eea}
+    #tabSubjects.active{background:#667eea;border-bottom:3px solid #667eea}
+    #tabAssignments.active{background:#667eea;border-bottom:3px solid #667eea}
+    .subjGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin:16px 0}
+    .subjCard{border:1px solid #ddd;padding:12px;border-radius:6px}
+    .subjCard h3{margin:0 0 8px;color:#333}
+    .subjList{list-style:none;padding:0;margin:8px 0}
+    .subjList li{padding:6px;background:#f5f5f5;margin:4px 0;border-radius:4px;display:flex;justify-content:space-between;align-items:center}
+    .subjList button{padding:4px 8px;font-size:0.85em;margin-left:8px}
+    .addSubjInput{display:flex;gap:6px;margin-top:8px}
+    .addSubjInput input{flex:1;padding:6px;border:1px solid #ddd;border-radius:4px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>HOD Login Panel</h1>
+    <div style="text-align:right;margin-bottom:10px">
+      <button onclick="logout()" style="background:#e74c3c;padding:6px 12px;border-radius:4px;color:#fff;border:0;cursor:pointer">Logout</button>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:16px;border-bottom:2px solid #ddd;padding-bottom:8px">
+      <button id="tabTeachers" class="active">Teachers</button>
+      <button id="tabSubjects">Manage Subjects</button>
+      <button id="tabAssignments">Subject Assignments</button>
+      <button id="tabUploads">Subject Uploads</button>
+    </div>
+
+    <!-- Teachers Tab -->
+    <div id="teachersTab" class="tab-content">
+    <h2>Collected Teachers</h2>
+    
+    <div class="controls">
+      <button id="refresh">Refresh</button>
+      <button id="exportCsv">Export CSV</button>
+      <button id="clear" class="danger">Clear All Data</button>
+      <button id="openGenerator">Generate</button>
+      <button id="generateTimetables">Generate Timetables</button>
+    </div>
+    <div id="summary" style="margin-bottom:12px;color:#333"></div>
+    <div id="storageDebug" style="font-size:0.9em;color:#666;margin-bottom:12px"></div>
+    <div style="overflow:auto;max-height:520px">
+      <table id="teachersTable">
+        <thead><tr><th>Name</th><th>Email</th><th>Designation</th><th>Workload</th><th>Classes</th><th>Days</th><th>Submitted</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div id="timetablesOutput" style="margin-top:18px"></div>
+    </div>
+
+    <!-- Subjects Tab -->
+    <div id="subjectsTab" class="tab-content" style="display:none">
+      <h2>Manage Subjects by Semester</h2>
+      <div style="margin-bottom:8px">
+        <button id="resetCurriculum" class="danger">Reset Curriculum Defaults</button>
+        <small style="display:block;color:#666;margin-top:4px">(Overwrites all subject lists with built-in defaults)</small>
+      </div>
+      <div id="subjectManager"></div>
+    </div>
+
+    <!-- Subject Assignments Tab -->
+    <div id="assignmentsTab" class="tab-content" style="display:none">
+      <h2>Subject Assignments Overview</h2>
+      <div id="assignmentsOverview"></div>
+    </div>
+
+    <!-- Subject Uploads Tab -->
+    <div id="uploadsTab" class="tab-content" style="display:none">
+      <h2>Subject Uploads (Syllabus & Details)</h2>
+      <div class="controls">
+        <button id="refreshUploads">Refresh</button>
+        <button id="exportUploads">Export Uploads Report</button>
+      </div>
+      <div id="uploadsOverview" style="margin-top:16px"></div>
+    </div>
+  </div>
+
+  <script>
+    const KEY = 'teachers_data';
+    const SUBJECTS_KEY = 'curriculum_subjects';
+
+    // Session validation - redirect to login if not authenticated
+    if (sessionStorage.getItem('portal_role') !== 'hod') {
+      window.location.href = 'index.html';
+    }
+
+    // safe JSON parse helper: returns default on error and recovers storage
+    function safeGetJSON(key, defaultVal) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw === null || raw === undefined) return defaultVal;
+        return JSON.parse(raw);
+      } catch (err) {
+        console.error('safeGetJSON parse error for', key, err);
+        try { localStorage.setItem(key, JSON.stringify(defaultVal)); } catch (e) { /* ignore */ }
+        return defaultVal;
+      }
+    }
+
+    // non-destructive parser: logs errors but does NOT overwrite storage
+    function safeGetJSONNoWrite(key, defaultVal) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw === null || raw === undefined) return defaultVal;
+        return JSON.parse(raw);
+      } catch (err) {
+        console.error('safeGetJSONNoWrite parse error for', key, err);
+        return defaultVal;
+      }
+    }
+
+    // Initialize default subjects if not present or missing keys
+    function initializeSubjects() {
+      const sections = {
+        'ODD': ['BCA_A', 'BCA_B', 'BCA_C', 'MCA_A', 'MCA_B'],
+        'EVEN': ['BCA_A', 'BCA_B', 'BCA_C', 'MCA_A', 'MCA_B']
+      };
+      const years = ['Y1','Y2','Y3'];
+      const specsY3 = [
+        { key: 'CYBER_SECURITY', label: 'Cyber Security' },
+        { key: 'MULTIMEDIA', label: 'Multimedia' },
+        { key: 'GENERAL', label: 'General' }
+      ];
+
+      const defaults = {};
+      Object.keys(sections).forEach(sem => {
+        sections[sem].forEach(sec => {
+          years.forEach(y => {
+            // for MCA (PG) sections, only use first two years
+            if (sec.startsWith('MCA') && y === 'Y3') {
+              return; // skip
+            }
+            if (y === 'Y3') {
+              // create specialization keys for year 3
+              specsY3.forEach(s => {
+                const key = sem + '_' + sec + '_' + y + '_' + s.key;
+                if (s.key === 'CYBER_SECURITY') {
+                  // add odd/even lists based on semester
+                  if (sem === 'ODD') {
+                    defaults[key] = ['Networking tools','Advanced Networking','Hacking Basics','Operating Systems','Secure Programming'];
+                  } else {
+                    defaults[key] = ['Cryptography','Web Security','Cyber Laws & Ethics','Ethical Hacking','Digital Forensics'];
+                  }
+                } else if (s.key === 'MULTIMEDIA') {
+                  if (sem === 'ODD') {
+                    defaults[key] = ['Introduction to Multimedia','Graphic Design Fundamentals','Digital Image Processing','Web Design & Development','2D Animation'];
+                  } else {
+                    defaults[key] = ['3D Animation Basics','Audio & Video Editing','UI/UX Design','Multimedia Systems','Digital Marketing Basics'];
+                  }
+                } else if (s.key === 'GENERAL') {
+                  if (sem === 'ODD') {
+                    defaults[key] = ['Web Technology','Computer Graphics','Software Engineering','Computer Organization & Architecture','Web Security'];
+                  } else {
+                    defaults[key] = ['UI/UX Design','Multimedia Systems','Cryptography','Introduction to Multimedia','Introduction to Cyber Security'];
+                  }
+                } else {
+                  defaults[key] = [];
+                }
+              });
+            } else {
+              const key = sem + '_' + sec + '_' + y;
+              if (sec.startsWith('MCA')) {
+                // PG (MCA) specific defaults per year/semester
+                if (y === 'Y1') {
+                  if (sem === 'ODD') {
+                    defaults[key] = ['Statistics','Computer Networks','Python','Java','Advanced Data Structure','Accounts'];
+                  } else {
+                    defaults[key] = ['Machine Learning','Full Stack Development','Research Methodology','Software Design','Elective - Blockchain','Elective - Cloud Basics','Elective - Data Visualization','Nptel 1'];
+                  }
+                } else {
+                  defaults[key] = ['Advanced Algorithms','Machine Learning','Distributed Systems','Artificial Intelligence'];
+                }
+              } else {
+                if (y === 'Y1') {
+                  if (sem === 'ODD') {
+                    defaults[key] = ['Statistics','Accounts','English','C','C++','Computer Concepts'];
+                  } else {
+                    defaults[key] = ['English','Communication','Web Designing','Python','Problem Solving Techniques'];
+                  }
+                } else if (y === 'Y2') {
+                  if (sem === 'ODD') {
+                    defaults[key] = ['Java','Advanced Python','Data Structure','Computer Networks','Nptel Course 1'];
+                  } else {
+                    defaults[key] = ['PHP','Enterprise Resource Management','Advanced Computer Networks','Database Management','Nptel Course 2'];
+                  }
+                }
+              }
+            }
+          });
+        });
+      });
+      let existing = safeGetJSON(SUBJECTS_KEY, {});
+      let changed = false;
+      Object.keys(defaults).forEach(k => {
+        if (!Array.isArray(existing[k]) || existing[k].join(',') !== defaults[k].join(',')) {
+          existing[k] = defaults[k].slice();
+          changed = true;
+          console.log('admin initializeSubjects: set', k);
+        }
+      });
+      // remove any obsolete keys that are no longer part of defaults
+      Object.keys(existing).forEach(k => {
+        if (!(k in defaults)) {
+          delete existing[k];
+          changed = true;
+          console.log('admin initializeSubjects: removed obsolete key', k);
+        }
+      });
+      if (changed || !localStorage.getItem(SUBJECTS_KEY)) {
+        localStorage.setItem(SUBJECTS_KEY, JSON.stringify(existing));
+      }
+    }
+
+    function resetSubjects() {
+      localStorage.removeItem(SUBJECTS_KEY);
+      initializeSubjects();
+      renderSubjectManager();
+      alert('Curriculum reset to defaults');
+    }
+
+    function getSubjects() {
+      initializeSubjects();
+      return safeGetJSON(SUBJECTS_KEY, {});
+    }
+
+    function saveSubjects(subjects) {
+      localStorage.setItem(SUBJECTS_KEY, JSON.stringify(subjects));
+      renderSubjectManager();
+    }
+
+    // Tab switching
+    document.getElementById('tabTeachers').addEventListener('click', function() {
+      document.getElementById('teachersTab').style.display = 'block';
+      document.getElementById('subjectsTab').style.display = 'none';
+      document.getElementById('tabTeachers').classList.add('active');
+      document.getElementById('tabSubjects').classList.remove('active');
+    });
+
+    document.getElementById('tabSubjects').addEventListener('click', function() {
+      document.getElementById('teachersTab').style.display = 'none';
+      document.getElementById('subjectsTab').style.display = 'block';
+      document.getElementById('tabTeachers').classList.remove('active');
+      document.getElementById('tabSubjects').classList.add('active');
+      renderSubjectManager();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const btn = document.getElementById('resetCurriculum');
+      if (btn) btn.addEventListener('click', resetSubjects);
+    });
+
+    function renderSubjectManager() {
+      const subjects = getSubjects();
+      const manager = document.getElementById('subjectManager');
+      manager.innerHTML = '';
+
+      const sems = ['ODD', 'EVEN'];
+      const groups = [
+        { label: 'BCA', sections: ['BCA_A','BCA_B','BCA_C'] },
+        { label: 'MCA', sections: ['MCA_A','MCA_B'] }
+      ];
+      const specsY3 = [
+        { key: 'CYBER_SECURITY', label: 'Cyber Security' },
+        { key: 'MULTIMEDIA', label: 'Multimedia' },
+        { key: 'GENERAL', label: 'General' }
+      ];
+
+      sems.forEach(sem => {
+        groups.forEach(group => {
+          // heading for each semester/class-type block
+          const hdr = document.createElement('h3');
+          hdr.textContent = `${sem} ${group.label}`;
+          manager.appendChild(hdr);
+
+          const grid = document.createElement('div');
+          grid.className = 'subjGrid';
+
+          group.sections.forEach(sec => {
+            ['Y1','Y2'].forEach(y => {
+              const key = sem + '_' + sec + '_' + y;
+              const label = `${sem} ${sec.replace('_',' ')} ${y.slice(1)}`;
+              const card = document.createElement('div');
+              card.className = 'subjCard';
+              card.innerHTML = `<h3>${label}</h3>`;
+
+              const list = document.createElement('ul');
+              list.className = 'subjList';
+              (subjects[key] || []).forEach(subj => {
+                const li = document.createElement('li');
+                // make name clickable to open syllabus page
+                li.innerHTML = `<a href="#" onclick="openSyllabus('${key}','${subj}')">${subj}</a> <button onclick="removeSubject('${key}', '${subj}')">Remove</button>`;
+                list.appendChild(li);
+              });
+              card.appendChild(list);
+
+              const addDiv = document.createElement('div');
+              addDiv.className = 'addSubjInput';
+              addDiv.innerHTML = `
+                <input type="text" id="input_${key}" placeholder="Add new subject">
+                <button onclick="addSubject('${key}')">Add</button>
+              `;
+              card.appendChild(addDiv);
+              grid.appendChild(card);
+            });
+
+            // only BCA (UG) have 3rd-year specializations
+            if (group.label === 'BCA') {
+              specsY3.forEach(spec => {
+                const key = sem + '_' + sec + '_Y3_' + spec.key;
+                const label = `${sem} ${sec.replace('_',' ')} 3 - ${spec.label}`;
+                const card = document.createElement('div');
+                card.className = 'subjCard';
+                card.innerHTML = `<h3>${label}</h3>`;
+
+                const list = document.createElement('ul');
+                list.className = 'subjList';
+                (subjects[key] || []).forEach(subj => {
+                  const li = document.createElement('li');
+                  li.innerHTML = `<a href="#" onclick="openSyllabus('${key}','${subj}')">${subj}</a> <button onclick="removeSubject('${key}', '${subj}')">Remove</button>`;
+                  list.appendChild(li);
+                });
+                card.appendChild(list);
+
+                const addDiv = document.createElement('div');
+                addDiv.className = 'addSubjInput';
+                addDiv.innerHTML = `
+                  <input type="text" id="input_${key}" placeholder="Add new subject">
+                  <button onclick="addSubject('${key}')">Add</button>
+                `;
+                card.appendChild(addDiv);
+                grid.appendChild(card);
+              });
+            }
+          });
+          manager.appendChild(grid);
+        });
+      });
+    }
+
+    // open a new window for syllabus upload/download
+    function openSyllabus(key, subj) {
+      const url = 'syllabus.html?key=' + encodeURIComponent(key) + '&subj=' + encodeURIComponent(subj);
+      window.open(url, '_blank');
+    }
+
+    window.removeSubject = function(key, subj) {
+      const subjects = getSubjects();
+      subjects[key] = subjects[key].filter(s => s !== subj);
+      saveSubjects(subjects);
+    };
+
+    window.addSubject = function(key) {
+      const input = document.getElementById(`input_${key}`);
+      const val = input.value.trim();
+      if (!val) { alert('Please enter a subject name'); return; }
+      const subjects = getSubjects();
+      if (!subjects[key].includes(val)) {
+        subjects[key].push(val);
+        saveSubjects(subjects);
+        input.value = '';
+      } else {
+        alert('Subject already exists');
+      }
+    };
+
+    function load() {
+      // show raw storage debug info
+      const raw = localStorage.getItem(KEY);
+      const dbg = document.getElementById('storageDebug');
+      if (dbg) dbg.textContent = raw ? ('raw teachers_data length: ' + raw.length) : 'raw teachers_data: (empty)';
+
+      // Define workload hours by designation
+      const workloadHours = {
+        'professor': 12,
+        'professor (part time)': 8,
+        'associate professor': 14,
+        'associate professor (part time)': 9,
+        'assistant professor (sc)': 16,
+        'assistant professor (sc-part time)': 9,
+        'assistant professor (ss)': 16,
+        'assistant professor (ss-part time)': 9
+      };
+
+      const data = safeGetJSONNoWrite(KEY, []);
+      console.log('admin.load: found entries', data.length);
+      const tbody = document.querySelector('#teachersTable tbody'); tbody.innerHTML = '';
+      let ug=0, pg=0, total=0;
+      data.forEach(t => {
+        total++;
+        // count UG/PG from classes array
+        if (t.classes && Array.isArray(t.classes)) {
+          t.classes.forEach(c => {
+            if (c.classType === 'UG') ug++; else if (c.classType === 'PG') pg++;
+          });
+        }
+        
+        const tr = document.createElement('tr');
+        // build classes column: show each class on separate line
+        let classesHtml = '';
+        let totalHours = 0;
+        if (t.classes && Array.isArray(t.classes)) {
+          t.classes.forEach(c => {
+            const spec = c.specialization ? ' - ' + c.specialization : '';
+            classesHtml += `${c.classType} ${c.section} ${c.semester} Y${c.year.slice(1)}${spec}<br/>Hrs: ${c.hours}, Lab: ${c.labCap?'Yes':'No'}<br/>Subj: ${(c.subjects||[]).join(', ')}<br/><br/>`;
+            totalHours += c.hours || 0;
+          });
+        }
+        
+        const teacherWorkload = t.workingHours || workloadHours[(t.designation || '').toLowerCase()] || 16;
+        const workloadDisplay = `${totalHours}/${teacherWorkload} hrs`;
+        const workloadStyle = totalHours > teacherWorkload ? 'color:#e74c3c;font-weight:bold' : '';
+
+        tr.innerHTML = `
+          <td>${t.name}</td>
+          <td>${t.email||''}</td>
+          <td>${t.designation||''}</td>
+          <td style="${workloadStyle}">${workloadDisplay}</td>
+          <td>${classesHtml}</td>
+          <td>${(t.days||[]).join(', ')}</td>
+          <td>${new Date(t.submittedAt).toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('summary').textContent = `Total: ${total} — UG: ${ug} — PG: ${pg}`;
+    }
+
+    document.getElementById('refresh').addEventListener('click', load);
+
+    // auto-refresh when localStorage changes (teacher submissions from other tab)
+    window.addEventListener('storage', (e) => {
+      if (e.key === KEY) {
+        console.log('storage event: teachers_data changed, reloading admin table');
+        load();
+      }
+    });
+
+    document.getElementById('exportCsv').addEventListener('click', () => {
+      const data = safeGetJSON(KEY, []);
+      if (!data.length) { alert('No data to export'); return; }
+      let csv = 'Name,Email,Class,Hours,Lab,Subjects,Days,Submitted\n';
+      data.forEach(t => {
+        const row = [t.name, t.email||'', t.classType, t.hours, t.labCap?'Yes':'No', '"'+(t.subjects||[]).join('; ')+'"', '"'+(t.days||[]).join('; ')+'"', t.submittedAt];
+        csv += row.join(',') + '\n';
+      });
+      const blob = new Blob([csv],{type:'text/csv'}); const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'teachers_data.csv'; a.click(); URL.revokeObjectURL(url);
+    });
+
+    document.getElementById('clear').addEventListener('click', () => {
+      if (!confirm('Clear all collected teachers data?')) return; localStorage.removeItem(KEY); load();
+    });
+
+    document.getElementById('openGenerator').addEventListener('click', () => {
+      const genBtn = document.getElementById('generateTimetables');
+      if (genBtn) genBtn.click();
+    });
+
+    document.getElementById('generateTimetables').addEventListener('click', () => {
+      const data = safeGetJSON(KEY, []);
+      if (!data.length) { alert('No teacher submissions found.'); return; }
+
+      // Define workload hours by designation
+      const workloadHours = {
+        'professor': 12,
+        'professor (part time)': 8,
+        'associate professor': 14,
+        'associate professor (part time)': 9,
+        'assistant professor (sc)': 16,
+        'assistant professor (sc-part time)': 9,
+        'assistant professor (ss)': 16,
+        'assistant professor (ss-part time)': 9
+      };
+
+      const groupedSubjects = {};
+
+      data.forEach(t => {
+        if (!t.classes || !Array.isArray(t.classes)) return;
+        const teacherWorkload = t.workingHours || workloadHours[(t.designation || '').toLowerCase()] || 16; // default to 16 if designation not found
+        let teacherTotalHours = 0;
+
+        t.classes.forEach(c => {
+          const subjects = (c.subjects || []);
+          if (!subjects.length) return;
+          const perSub = Math.max(1, Math.round((c.hours||0) / subjects.length));
+          const secName = (c.section || '').replace('_', ' ');
+          const ttKey = `${secName} - ${c.year}`;
+          if (!groupedSubjects[ttKey]) groupedSubjects[ttKey] = [];
+
+          subjects.forEach(s => {
+            const entry = { name: s, code: s.replace(/\s+/g,'').toUpperCase(), teacher: t.name, classes: perSub, hasLab: c.labCap, labClasses: c.labCap?1:0 };
+            teacherTotalHours += perSub;
+            groupedSubjects[ttKey].push(entry);
+          });
+        });
+
+        // Check if teacher exceeds workload
+        if (teacherTotalHours > teacherWorkload) {
+          alert(`Warning: ${t.name} (${t.designation}) has ${teacherTotalHours} hours assigned, but workload limit is ${teacherWorkload} hours.`);
+        }
+      });
+
+      // Build teacher workload map
+      const teacherWorkloadMap = {};
+      data.forEach(t => {
+        teacherWorkloadMap[t.name] = t.workingHours || workloadHours[(t.designation || '').toLowerCase()] || 16;
+      });
+
+      const output = document.getElementById('timetablesOutput'); output.innerHTML = '';
+      const keys = Object.keys(groupedSubjects).sort();
+      keys.forEach(ttKey => {
+        const table = generateAndRender(groupedSubjects[ttKey], ttKey, teacherWorkloadMap);
+        output.appendChild(table);
+      });
+      if (keys.length === 0) alert('No subjects available to schedule.');
+    });
+
+    // --- timetable generation helpers (simplified from main generator) ---
+    const TIME_SLOTS = [
+      {time: '8:30-9:20', type: 'period', label: 'Period 1'},
+      {time: '9:20-10:10', type: 'period', label: 'Period 2'},
+      {time: '10:10-10:30', type: 'break', label: 'Break'},
+      {time: '10:30-11:20', type: 'period', label: 'Period 3'},
+      {time: '11:20-12:00', type: 'period', label: 'Period 4'},
+      {time: '12:00-1:00', type: 'lunch', label: 'Lunch'},
+      {time: '1:00-1:50', type: 'period', label: 'Period 5'},
+      {time: '1:50-2:40', type: 'period', label: 'Period 6'}
+    ];
+
+    function createTimetableGrid(subjects, days, workloadHours) {
+      const timetable = {}; const periodSlots = TIME_SLOTS.filter(s=>s.type==='period');
+      days.forEach(d => { timetable[d] = {}; TIME_SLOTS.forEach(s=> timetable[d][s.time]=null); });
+
+      // Track teacher hours assigned
+      const teacherHours = {};
+
+      // create entries list, but filter based on workload
+      let entries = [];
+      subjects.forEach(sub => {
+        const teacherWorkload = workloadHours[sub.teacher] || 16;
+        const currentHours = teacherHours[sub.teacher] || 0;
+
+        for (let i=0;i<sub.classes;i++) {
+          if (currentHours + 1 <= teacherWorkload) {
+            entries.push({subject: sub, type:'class'});
+            teacherHours[sub.teacher] = currentHours + 1;
+          } else {
+            console.warn(`Skipping additional class for ${sub.teacher} - would exceed ${teacherWorkload} hours`);
+          }
+        }
+        if (sub.labClasses>0 && currentHours + 1 <= teacherWorkload) {
+          entries.push({subject: sub, type:'labBlock', count: sub.labClasses});
+          teacherHours[sub.teacher] = (teacherHours[sub.teacher] || 0) + 1;
+        }
+      });
+      entries = shuffle(entries);
+
+      const allSlots = [];
+      days.forEach(day => periodSlots.forEach(slot => allSlots.push({day, slotInfo: slot})) );
+
+      let idx=0;
+      entries.forEach(e => {
+        if (idx >= allSlots.length) return;
+        if (e.type === 'labBlock') {
+          for (let k=0;k<e.count && idx<allSlots.length;k++){
+            const {day,slotInfo} = allSlots[idx++]; timetable[day][slotInfo.time] = {...e.subject, type:'lab'};
+          }
+        } else {
+          const {day,slotInfo} = allSlots[idx++]; timetable[day][slotInfo.time] = {...e.subject, type:'class'};
+        }
+      });
+      return timetable;
+    }
+
+    function shuffle(arr){ const a=[...arr]; for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+
+    function renderTimetableDOM(timetable, days, title){
+      const container = document.createElement('div');
+      container.style.marginBottom = '18px';
+      const h = document.createElement('h2'); h.textContent = title; container.appendChild(h);
+
+      const table = document.createElement('table'); table.style.width='100%'; table.style.borderCollapse='collapse';
+      const thead = document.createElement('thead'); const headRow = document.createElement('tr'); headRow.innerHTML = '<th>Time Slot</th>' + days.map(d=>`<th>${d}</th>`).join(''); thead.appendChild(headRow); table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      TIME_SLOTS.forEach(slotInfo=>{
+        const tr = document.createElement('tr');
+        const td0 = document.createElement('td'); td0.innerHTML = `<strong>${slotInfo.label}</strong><br><small>${slotInfo.time}</small>`; td0.style.padding='8px'; tr.appendChild(td0);
+        days.forEach(day => {
+          const entry = timetable[day][slotInfo.time];
+          const td = document.createElement('td'); td.style.padding='8px';
+          if (slotInfo.type==='break') td.innerHTML='☕ BREAK'; else if (slotInfo.type==='lunch') td.innerHTML='🍽️ LUNCH';
+          else if (entry) td.innerHTML = `<div style="font-weight:600">${entry.code}</div><div>${entry.name}</div><div style="font-size:0.9em;color:#333">${entry.teacher}</div>`;
+          else td.innerHTML = '-'; tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody); container.appendChild(table);
+
+      // export button
+      const btn = document.createElement('button'); btn.textContent = 'Export '+title+' CSV'; btn.style.marginTop='8px';
+      btn.addEventListener('click', ()=> exportTimetableCSV(timetable, days, title.replace(/\s+/g,'_')+'.csv'));
+      container.appendChild(btn);
+
+      return container;
+    }
+
+    function exportTimetableCSV(timetable, days, filename){
+      let csv = 'Time Slot,' + days.join(',') + '\n';
+      const rows = [];
+      TIME_SLOTS.forEach(slotInfo =>{
+        const cols = [];
+        cols.push(slotInfo.label + ' ('+slotInfo.time+')');
+        days.forEach(d=>{
+          const e = timetable[d][slotInfo.time];
+          if (!e) cols.push('-'); else cols.push(`${e.code} | ${e.name} | ${e.teacher}`);
+        });
+        rows.push(cols.join(','));
+      });
+      csv += rows.join('\n');
+      const blob = new Blob([csv],{type:'text/csv'}); const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+    }
+
+    function generateAndRender(subjects, classLabel, teacherWorkloadMap){
+      // days default Mon-Fri
+      const days = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+      const timetable = createTimetableGrid(subjects, days, teacherWorkloadMap);
+      return renderTimetableDOM(timetable, days, classLabel + ' Timetable');
+    }
+
+    load();
+    
+    // Load subject uploads overview
+    function loadUploadsOverview() {
+      const container = document.getElementById('uploadsOverview');
+      container.innerHTML = '';
+
+      // Collect all uploaded syllabi based on assignments
+      const uploads = [];
+      const teachers = safeGetJSONNoWrite(KEY, []);
+      const assignments = safeGetJSONNoWrite('coord_assignments', []);
+
+      assignments.forEach(assignment => {
+        const teacher = teachers.find(t => (t.email || t.name) === assignment.facultyId);
+        if (!teacher) return;
+
+        const [curriculumKey, subject] = assignment.subjectKey.split('::');
+        const syllabusKey = 'syllabus_' + encodeURIComponent(curriculumKey) + '_' + encodeURIComponent(subject);
+        const syllabus = safeGetJSONNoWrite(syllabusKey, null);
+
+        if (syllabus) {
+          const [semester, section, year, ...specParts] = curriculumKey.split('_');
+          const specialization = specParts.join('_') || '';
+          const classType = section.startsWith('MCA') ? 'PG' : 'UG';
+
+          uploads.push({
+            teacher: teacher.name,
+            designation: teacher.designation,
+            subject: subject,
+            curriculum: curriculumKey,
+            classType: classType,
+            section: section,
+            year: year,
+            semester: semester,
+            specialization: specialization,
+            fileName: syllabus.name,
+            weightage: syllabus.weightage,
+            classroomLink: syllabus.classroomLink,
+            uploadedAt: syllabus.savedAt,
+            storageKey: syllabusKey
+          });
+        }
+      });
+
+      if (uploads.length === 0) {
+        container.innerHTML = '<p style="color:#666">No subject uploads yet. Teachers will see upload forms after they submit their subject selections.</p>';
+        return;
+      }
+
+      // Group by curriculum
+      const grouped = {};
+      uploads.forEach(u => {
+        if (!grouped[u.curriculum]) {
+          grouped[u.curriculum] = [];
+        }
+        grouped[u.curriculum].push(u);
+      });
+
+      // Display grouped uploads
+      Object.keys(grouped).sort().forEach(curriculum => {
+        const currDiv = document.createElement('div');
+        currDiv.style.marginBottom = '24px';
+        currDiv.style.borderLeft = '4px solid #667eea';
+        currDiv.style.paddingLeft = '16px';
+
+        const currTitle = document.createElement('h3');
+        currTitle.textContent = curriculum.replace(/_/g, ' ');
+        currTitle.style.marginTop = '0';
+        currTitle.style.color = '#333';
+        currDiv.appendChild(currTitle);
+
+        const table = document.createElement('table');
+        table.style.width = '100%';
+        table.style.marginBottom = '12px';
+        table.innerHTML = `
+          <thead>
+            <tr style="background:#f9fafb">
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">Subject</th>
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">Teacher</th>
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">Weightage</th>
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">Classroom</th>
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">File</th>
+              <th style="padding:10px;border-bottom:1px solid #eee;text-align:left">Uploaded</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        `;
+
+        grouped[curriculum].forEach(u => {
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid #eee';
+          
+          const fileLink = u.fileName ? `<a href="#" onclick="openUploadedFile('${u.storageKey}'); return false;" style="color:#667eea">${u.fileName}</a>` : '-';
+          const classroomLink = u.classroomLink ? `<a href="${u.classroomLink}" target="_blank" style="color:#667eea">View</a>` : '-';
+          const uploadDate = u.uploadedAt ? new Date(u.uploadedAt).toLocaleString() : '-';
+          
+          tr.innerHTML = `
+            <td style="padding:10px">${u.subject}</td>
+            <td style="padding:10px">${u.teacher}</td>
+            <td style="padding:10px">${u.weightage || '-'}${u.weightage ? '%' : ''}</td>
+            <td style="padding:10px">${classroomLink}</td>
+            <td style="padding:10px">${fileLink}</td>
+            <td style="padding:10px;font-size:0.9em">${uploadDate}</td>
+          `;
+          table.querySelector('tbody').appendChild(tr);
+        });
+
+        currDiv.appendChild(table);
+        container.appendChild(currDiv);
+      });
+    }
+
+    window.openUploadedFile = function(storageKey) {
+      const obj = safeGetJSONNoWrite(storageKey, null);
+      if (!obj || !obj.data) {
+        alert('File not found');
+        return;
+      }
+      const a = document.createElement('a');
+      a.href = obj.data;
+      a.download = obj.name || 'syllabus';
+      a.click();
+    };
+
+    document.getElementById('refreshUploads').addEventListener('click', loadUploadsOverview);
+
+    document.getElementById('exportUploads').addEventListener('click', () => {
+      const teachers = safeGetJSONNoWrite(KEY, []);
+      const assignments = safeGetJSONNoWrite('coord_assignments', []);
+      const uploads = [];
+
+      assignments.forEach(assignment => {
+        const teacher = teachers.find(t => (t.email || t.name) === assignment.facultyId);
+        if (!teacher) return;
+
+        const [curriculumKey, subject] = assignment.subjectKey.split('::');
+        const syllabusKey = 'syllabus_' + encodeURIComponent(curriculumKey) + '_' + encodeURIComponent(subject);
+        const syllabus = safeGetJSONNoWrite(syllabusKey, null);
+
+        if (syllabus) {
+          uploads.push({
+            curriculum: curriculumKey,
+            subject: subject,
+            teacher: teacher.name,
+            designation: teacher.designation,
+            fileName: syllabus.name || '',
+            weightage: syllabus.weightage || '',
+            classroomLink: syllabus.classroomLink || '',
+            uploadedAt: syllabus.savedAt || ''
+          });
+        }
+      });
+
+      if (!uploads.length) {
+        alert('No uploads to export');
+        return;
+      }
+
+      let csv = 'Curriculum,Subject,Teacher,Designation,File Name,Weightage,Classroom Link,Upload Date\n';
+      uploads.forEach(u => {
+        const row = [u.curriculum, u.subject, u.teacher, u.designation, u.fileName, u.weightage, u.classroomLink, u.uploadedAt];
+        csv += '"' + row.map(v => (v + '').replace(/"/g, '""')).join('","') + '"\n';
+      });
+
+      const blob = new Blob([csv], {type: 'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'subject_uploads_' + new Date().toISOString().split('T')[0] + '.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+    
+    // Load subject assignments overview
+    function loadAssignmentsOverview() {
+      const teachers = safeGetJSONNoWrite(KEY, []);
+      const coordAssignments = safeGetJSONNoWrite('coord_assignments', []);
+      const container = document.getElementById('assignmentsOverview');
+      container.innerHTML = '';
+      
+      if (!coordAssignments.length) {
+        container.innerHTML = '<p>No assignments available. Coordinator needs to assign subjects first.</p>';
+        return;
+      }
+      
+      // Group assignments by class configuration
+      const assignments = {};
+      
+      coordAssignments.forEach(assignment => {
+        const teacher = teachers.find(t => (t.email || t.name) === assignment.facultyId);
+        if (!teacher) return;
+
+        const [curriculumKey, subject] = assignment.subjectKey.split('::');
+        const [semester, section, year, ...specParts] = curriculumKey.split('_');
+        const specialization = specParts.join('_') || '';
+        const classType = section.startsWith('MCA') ? 'PG' : 'UG';
+        const key = `${classType}_${section}_${year}_${semester}${specialization ? '_' + specialization : ''}`;
+
+        if (!assignments[key]) {
+          assignments[key] = [];
+        }
+        assignments[key].push({
+          subject: subject,
+          teacher: teacher.name,
+          designation: teacher.designation
+        });
+      });
+      
+      // Display assignments
+      Object.keys(assignments).sort().forEach(classKey => {
+        const classDiv = document.createElement('div');
+        classDiv.style.marginBottom = '20px';
+        classDiv.style.padding = '12px';
+        classDiv.style.border = '1px solid #ddd';
+        classDiv.style.borderRadius = '6px';
+        
+        const title = document.createElement('h3');
+        title.textContent = classKey.replace(/_/g, ' ');
+        classDiv.appendChild(title);
+        
+        const subjectList = document.createElement('ul');
+        assignments[classKey].forEach(assignment => {
+          const li = document.createElement('li');
+          li.textContent = `${assignment.subject} - ${assignment.teacher} (${assignment.designation})`;
+          subjectList.appendChild(li);
+        });
+        classDiv.appendChild(subjectList);
+        
+        container.appendChild(classDiv);
+      });
+    }
+    
+    // Load subjects manager (placeholder for now)
+    function loadSubjectsManager() {
+      // This would load the subjects management interface
+      // For now, just ensure the subjects are initialized
+      initializeSubjects();
+    }
+    
+    // Tab switching
+    document.getElementById('tabTeachers').addEventListener('click', () => {
+      document.getElementById('tabTeachers').classList.add('active');
+      document.getElementById('tabSubjects').classList.remove('active');
+      document.getElementById('tabAssignments').classList.remove('active');
+      document.getElementById('tabUploads').classList.remove('active');
+      document.getElementById('teachersTab').style.display = 'block';
+      document.getElementById('subjectsTab').style.display = 'none';
+      document.getElementById('assignmentsTab').style.display = 'none';
+      document.getElementById('uploadsTab').style.display = 'none';
+    });
+    
+    document.getElementById('tabSubjects').addEventListener('click', () => {
+      document.getElementById('tabTeachers').classList.remove('active');
+      document.getElementById('tabSubjects').classList.add('active');
+      document.getElementById('tabAssignments').classList.remove('active');
+      document.getElementById('tabUploads').classList.remove('active');
+      document.getElementById('teachersTab').style.display = 'none';
+      document.getElementById('subjectsTab').style.display = 'block';
+      document.getElementById('assignmentsTab').style.display = 'none';
+      document.getElementById('uploadsTab').style.display = 'none';
+      loadSubjectsManager();
+    });
+    
+    document.getElementById('tabAssignments').addEventListener('click', () => {
+      document.getElementById('tabTeachers').classList.remove('active');
+      document.getElementById('tabSubjects').classList.remove('active');
+      document.getElementById('tabAssignments').classList.add('active');
+      document.getElementById('tabUploads').classList.remove('active');
+      document.getElementById('teachersTab').style.display = 'none';
+      document.getElementById('subjectsTab').style.display = 'none';
+      document.getElementById('assignmentsTab').style.display = 'block';
+      document.getElementById('uploadsTab').style.display = 'none';
+      loadAssignmentsOverview();
+    });
+    
+    document.getElementById('tabUploads').addEventListener('click', () => {
+      document.getElementById('tabTeachers').classList.remove('active');
+      document.getElementById('tabSubjects').classList.remove('active');
+      document.getElementById('tabAssignments').classList.remove('active');
+      document.getElementById('tabUploads').classList.add('active');
+      document.getElementById('teachersTab').style.display = 'none';
+      document.getElementById('subjectsTab').style.display = 'none';
+      document.getElementById('assignmentsTab').style.display = 'none';
+      document.getElementById('uploadsTab').style.display = 'block';
+      loadUploadsOverview();
+    });
+
+    window.logout = function() {
+      sessionStorage.clear();
+      window.location.replace('index.html');
+    };
+
+    // Auto-logout on back button press
+    window.addEventListener('popstate', function(event) {
+      // Clear session and redirect to login when back button is pressed
+      sessionStorage.clear();
+      window.history.replaceState(null, null, 'index.html');
+      window.history.replaceState(null, null, window.location.href);
+    });
+  </script>
+</body>
+</html>

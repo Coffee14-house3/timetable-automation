@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hindustan University – Portal</title>
+<script>
+  (function() {
+    var _origFetch = window.fetch;
+    window.fetch = function(url, options) {
+      if (typeof url === 'string' && url.indexOf('http://localhost:5000') === 0) {
+        if (window.location.hostname !== 'localhost' || (window.location.port && window.location.port !== '5000')) {
+          url = url.replace('http://localhost:5000', '');
+        }
+      }
+      return _origFetch.call(this, url, options);
+    };
+  })();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue-dark:  #1a3a5c;
+    --blue-mid:   #2563a8;
+    --blue-light: #4a90d9;
+    --blue-pale:  #8fb7d1;
+    --gold:       #e8b84b;
+    --gold-light: #f5d87a;
+    --white:      #ffffff;
+    --glass:      rgba(255,255,255,0.18);
+    --glass-border: rgba(255,255,255,0.35);
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(135deg, #1a3a5c 0%, #2563a8 45%, #8fb7d1 100%);
+    min-height: 100vh;
+    display: flex;
+    overflow: hidden;
+  }
+
+  /* ── ANIMATED BG SHAPES ── */
+  .bg-shapes { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .shape {
+    position: absolute; border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+    animation: floatShape 18s ease-in-out infinite;
+  }
+  .shape:nth-child(1) { width:400px;height:400px;top:-80px;right:-80px;animation-delay:0s; }
+  .shape:nth-child(2) { width:250px;height:250px;bottom:-60px;left:30%;animation-delay:-6s; }
+  .shape:nth-child(3) { width:180px;height:180px;top:40%;left:-50px;animation-delay:-12s; }
+  @keyframes floatShape {
+    0%,100% { transform: translate(0,0) scale(1); }
+    33%      { transform: translate(20px,-30px) scale(1.05); }
+    66%      { transform: translate(-15px,20px) scale(0.97); }
+  }
+
+  /* ── LAYOUT ── */
+  .container { display: flex; width: 100%; position: relative; z-index: 1; }
+
+  /* ── LEFT PANEL ── */
+  .left {
+    width: 48%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 50px;
+    gap: 32px;
+  }
+
+  .logo-wrap img {
+    width: 340px;
+    max-width: 90%;
+    filter: drop-shadow(0 4px 24px rgba(0,0,0,0.3));
+    animation: fadeDown 0.7s ease both;
+  }
+  @keyframes fadeDown {
+    from { opacity:0; transform:translateY(-20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── GLASS LOGIN BOX ── */
+  .login-box {
+    background: var(--glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+    padding: 36px 40px;
+    width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    animation: fadeUp 0.7s ease 0.15s both;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(24px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── ROLE TABS ── */
+  .role-tabs {
+    display: flex;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 2px;
+    margin-bottom: 24px;
+  }
+  .role-tab {
+    flex: 1;
+    padding: 9px 4px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .role-tab .tab-icon { font-size: 1.1rem; }
+  .role-tab:hover { color: rgba(255,255,255,0.85); }
+  .role-tab.active {
+    background: var(--gold);
+    color: var(--blue-dark);
+    box-shadow: 0 2px 12px rgba(232,184,75,0.4);
+  }
+
+  /* ── FORM TITLE ── */
+  .form-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.45rem;
+    color: var(--white);
+    text-align: center;
+    margin-bottom: 20px;
+    letter-spacing: 0.01em;
+  }
+  .form-title span { color: var(--gold-light); }
+
+  /* ── INPUTS ── */
+  .input-group {
+    position: relative;
+    margin-bottom: 20px;
+  }
+  .input-group input,
+  .input-group select {
+    width: 100%;
+    padding: 13px 16px 13px 42px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 12px;
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+  }
+  .input-group select {
+    color: white;
+    cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.65) 50%), linear-gradient(135deg, rgba(255,255,255,0.65) 50%, transparent 50%);
+    background-position: calc(100% - 20px) calc(50% - 4px), calc(100% - 16px) calc(50% - 4px);
+    background-size: 8px 8px;
+    background-repeat: no-repeat;
+  }
+  .input-group option {
+    color: #1a3a5c;
+    background: #ffffff;
+  }
+  .input-group input::placeholder,
+  .input-group select::placeholder { color: rgba(255,255,255,0.55); }
+  .input-group input:focus,
+  .input-group select:focus {
+    border-color: var(--gold);
+    background: rgba(255,255,255,0.18);
+    box-shadow: 0 0 0 3px rgba(232,184,75,0.2);
+  }
+  .input-icon {
+    position: absolute;
+    left: 14px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 1rem;
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .input-icon.password-toggle {
+    pointer-events: auto;
+    cursor: pointer;
+  }
+
+  /* ── SUBMIT BUTTON ── */
+  .btn-submit {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+    color: var(--blue-dark);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s;
+    margin-top: 4px;
+    letter-spacing: 0.03em;
+    box-shadow: 0 4px 18px rgba(232,184,75,0.35);
+  }
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(232,184,75,0.5);
+  }
+  .btn-submit:active { transform: translateY(0); }
+
+  /* ── REGISTER LINK ── */
+  .register-link {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.65);
+  }
+  .register-link a {
+    color: var(--gold-light);
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .register-link a:hover { text-decoration: underline; }
+
+  /* ── ERROR ── */
+  .error-msg {
+    text-align: center;
+    color: #ff9a9a;
+    font-size: 0.82rem;
+    margin-top: 10px;
+    min-height: 18px;
+  }
+
+  /* ── CREDENTIAL HINT ── */
+  .cred-hint {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.65);
+    margin-top: 14px;
+    line-height: 1.6;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .cred-hint strong { color: var(--gold-light); }
+
+  /* ── RIGHT IMAGE ── */
+  .right {
+    width: 52%;
+    position: relative;
+    overflow: hidden;
+  }
+  .right img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .right::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(26,58,92,0.7) 0%, transparent 60%);
+  }
+
+  /* ── ROLE BADGE on right image ── */
+  .role-badge {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    z-index: 2;
+    background: rgba(26,58,92,0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    padding: 16px 24px;
+    color: white;
+    text-align: right;
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+  .role-badge .badge-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--gold-light);
+  }
+  .role-badge .badge-sub {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.6);
+    margin-top: 4px;
+  }
+
+  /* ── FORMS VISIBILITY ── */
+  .login-form, .signup-form { display: none; }
+  .login-form.active, .signup-form.active { display: block; }
+</style>
+</head>
+<body>
+
+<div class="bg-shapes">
+  <div class="shape"></div>
+  <div class="shape"></div>
+  <div class="shape"></div>
+</div>
+
+<div class="container">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="logo-wrap">
+      <img src="logo.png" alt="Hindustan University">
+    </div>
+
+    <div class="login-box">
+
+      <!-- 3-ROLE TABS -->
+      <div class="role-tabs">
+        <button class="role-tab active" id="tabAdmin" onclick="switchRole('admin')">
+          <span class="tab-icon">🛡️</span>HOD
+        </button>
+        <button class="role-tab" id="tabFaculty" onclick="switchRole('faculty')">
+          <span class="tab-icon">👨‍🏫</span>Faculty
+        </button>
+        <button class="role-tab" id="tabCoordinator" onclick="switchRole('coordinator')">
+          <span class="tab-icon">📋</span>Coord.
+        </button>
+      </div>
+
+      <!-- TITLE -->
+      <div class="form-title" id="formTitle">HOD<span>Login</span></div>
+
+      <!-- LOGIN FORM -->
+      <div class="login-form active" id="loginForm">
+        <div class="input-group">
+          <span class="input-icon">✉️</span>
+          <input type="email" id="loginEmail" placeholder="Email address" />
+        </div>
+        <div class="input-group">
+          <span class="input-icon password-toggle" id="passwordToggle" onclick="togglePasswordVisibility()">🔒</span>
+          <input type="password" id="loginPassword" placeholder="Password" />
+        </div>
+        <button class="btn-submit" onclick="doLogin()">Login →</button>
+        <div class="error-msg" id="errorMsg"></div>
+        <div class="cred-hint" id="credHint">
+          <strong>hod credentials:</strong><br>
+          Email: <strong>hod@huniv.edu</strong><br>
+          Password: <strong>hod123</strong>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT IMAGE -->
+  <div class="right">
+    <img src="buildingjb.jpg" alt="Hindustan University Campus">
+    <div class="role-badge" id="roleBadge">
+      <div class="badge-title" id="badgeTitle">Administrator</div>
+      <div class="badge-sub" id="badgeSub">Full system access</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── USER STORE ──
+  function getUsers() {
+    try { return JSON.parse(localStorage.getItem('portal_users') || '[]'); } catch { return []; }
+  }
+  function saveUsers(u) { localStorage.setItem('portal_users', JSON.stringify(u)); }
+
+  // Check if already logged in and redirect
+  const role = sessionStorage.getItem('portal_role');
+  if (role) {
+    if (role === 'hod') {
+      window.location.href = 'hod.html';
+    } else if (role === 'coordinator') {
+      window.location.href = 'coordinator.html';
+    } else if (role === 'faculty') {
+      window.location.href = 'teacher.html';
+    }
+  }
+
+  // Default credentials
+  const ADMIN_EMAIL = 'hod@huniv.edu';
+  const ADMIN_PASS  = 'hod123';
+  const COORD_EMAIL = 'coordinator@huniv.edu';
+  const COORD_PASS  = 'coord123';
+
+  let currentRole = 'admin';
+
+  const roles = {
+    admin: {
+      title: 'HOD <span>Login</span>',
+      badge: { title: 'Head of Department', sub: 'Full system access' },
+      hint: '<strong>HOD credentials:</strong><br>Email: <strong>hod@huniv.edu</strong><br>Password: <strong>hod123</strong>',
+      redirect: 'hod.html'
+    },
+    faculty: {
+      title: 'Faculty <span>Login</span>',
+      badge: { title: 'Faculty Member', sub: 'Preferences & timetable' },
+      hint: '<strong>Faculty:</strong> Use your email and your <strong>teacher code</strong> (provided by HOD) as your password.',
+      redirect: 'teacher.html'
+    },
+    coordinator: {
+      title: 'Coordinator <span>Login</span>',
+      badge: { title: 'Timetable Coordinator', sub: 'Assign subjects & manage schedule' },
+      hint: '<strong>Coordinator credentials:</strong><br>Email: <strong>coordinator@huniv.edu</strong><br>Password: <strong>coord123</strong>',
+      redirect: 'coordinator.html'
+    }
+  };
+
+  function switchRole(role) {
+    currentRole = role;
+    const cfg = roles[role];
+
+    // Tabs
+    document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab' + role.charAt(0).toUpperCase() + role.slice(1)).classList.add('active');
+
+    // Title
+    document.getElementById('formTitle').innerHTML = cfg.title;
+
+    // Badge
+    document.getElementById('badgeTitle').textContent = cfg.badge.title;
+    document.getElementById('badgeSub').textContent   = cfg.badge.sub;
+
+    // Hint
+    document.getElementById('credHint').innerHTML = cfg.hint;
+
+    // Always show login form when switching
+    document.getElementById('loginForm').classList.add('active');
+    document.getElementById('errorMsg').textContent = '';
+
+    // Clear fields
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+  }
+
+  // Helper to get teachers data from localStorage
+  function getTeachersData() {
+    try {
+      const raw = localStorage.getItem('teachers_data');
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function togglePasswordVisibility() {
+    const passInput = document.getElementById('loginPassword');
+    const toggleIcon = document.getElementById('passwordToggle');
+    if (!passInput || !toggleIcon) return;
+
+    if (passInput.type === 'password') {
+      passInput.type = 'text';
+      toggleIcon.textContent = '🔓';
+    } else {
+      passInput.type = 'password';
+      toggleIcon.textContent = '🔒';
+    }
+  }
+
+  async function doLogin() {
+    const email = document.getElementById('loginEmail').value.trim();
+    const pass  = document.getElementById('loginPassword').value.trim();
+    const err   = document.getElementById('errorMsg');
+    err.textContent = '';
+
+    if (!email || !pass) { err.textContent = 'Please fill in all fields.'; return; }
+
+    if (currentRole === 'admin') {
+      try {
+        const res = await fetch('http://localhost:5000/api/hod/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pass })
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          throw new Error(data?.error || 'Invalid HOD credentials.');
+        }
+        const hod = await res.json();
+        sessionStorage.setItem('portal_role', 'hod');
+        sessionStorage.setItem('hod_email', hod.email);
+        sessionStorage.setItem('hod_name', hod.name);
+        window.location.href = 'hod.html';
+      } catch (loginError) {
+        err.textContent = loginError.message || 'Invalid HOD credentials.';
+      }
+      return;
+    }
+
+    if (currentRole === 'coordinator') {
+      if (email === COORD_EMAIL && pass === COORD_PASS) {
+        sessionStorage.setItem('portal_role', 'coordinator');
+        window.location.href = 'coordinator.html';
+      } else {
+        err.textContent = 'Invalid coordinator credentials.';
+      }
+      return;
+    }
+
+    if (currentRole === 'faculty') {
+      try {
+        const res = await fetch('http://localhost:5000/api/teachers');
+        if (!res.ok) {
+          throw new Error('Unable to verify faculty credentials at this time.');
+        }
+        const teachers = await res.json();
+        const teacher = teachers.find(t => t.email && t.email.toLowerCase() === email.toLowerCase() && t.code === pass);
+
+        if (teacher) {
+          sessionStorage.setItem('portal_role', 'faculty');
+          sessionStorage.setItem('faculty_email', email);
+          sessionStorage.setItem('faculty_name', teacher.name);
+          sessionStorage.setItem('faculty_designation', teacher.designation || '');
+          sessionStorage.setItem('faculty_code', teacher.code || '');
+          window.location.href = 'teacher.html';
+        } else {
+          err.textContent = 'Invalid faculty credentials. Check your email and teacher code.';
+        }
+      } catch (loginError) {
+        err.textContent = loginError.message || 'Unable to verify faculty credentials.';
+      }
+    }
+  }
+
+  // Keyboard enter key support
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      doLogin();
+    }
+  });
+</script>
+</body>
+</html>
