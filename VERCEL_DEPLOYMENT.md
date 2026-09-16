@@ -22,9 +22,10 @@ This repository is already configured to deploy seamlessly to **Vercel** with su
 3. Select your exported GitHub repository and click **"Import"**.
 
 ### Step 3: Configure Project Settings
-- **Framework Preset**: Leave as **Other** (or automatic).
+- **Framework Preset**: Select **Other**.
 - **Root Directory**: `./` (default).
-- **Build and Output Settings**: Defaults are already configured (`npm run build` / standard root static files).
+- **Output Directory**: The `vercel.json` already sets `"outputDirectory": "."`. If Vercel prompts for an Output Directory in the UI, ensure it is set to `.` (or empty).
+- **Build Command**: Leave default or empty.
 
 ### Step 4: Environment Variables
 Under **Environment Variables**, add:
