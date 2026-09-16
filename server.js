@@ -13,28 +13,57 @@ app.use(express.json());
 // Serve static frontend files (HTML, images, assets)
 app.use(express.static(__dirname));
 
-// MongoDB Connection with fallback
+// MongoDB Connection with fallback & serverless caching
 const MONGODB_URI = process.env.MONGO_URI || process.env.MONGODB_URI;
 let isMongoConnected = false;
+let mongoPromise = null;
+
+async function connectToMongo() {
+  if (isMongoConnected && mongoose.connection.readyState === 1) {
+    return true;
+  }
+  if (!MONGODB_URI) {
+    return false;
+  }
+  if (mongoPromise) {
+    await mongoPromise;
+    return isMongoConnected;
+  }
+  mongoPromise = mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000,
+    bufferCommands: false,
+  }).then(() => {
+    isMongoConnected = true;
+    console.log(' Connected to MongoDB Atlas!');
+    return true;
+  }).catch(err => {
+    isMongoConnected = false;
+    mongoPromise = null;
+    console.warn(' MongoDB Atlas connection error; using in-memory store:', err.message);
+    return false;
+  });
+  await mongoPromise;
+  return isMongoConnected;
+}
 
 if (MONGODB_URI) {
-  mongoose.connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000,
-  })
-    .then(() => {
-      isMongoConnected = true;
-      console.log(' Connected to MongoDB Atlas!');
-    })
-    .catch(err => {
-      isMongoConnected = false;
-      console.warn(' MongoDB Atlas connection error; using in-memory store:', err.message);
-    });
+  connectToMongo();
 } else {
   console.log(' No MONGO_URI provided; using in-memory store for local/preview mode.');
 }
 
 mongoose.connection.on('connected', () => { isMongoConnected = true; });
-mongoose.connection.on('disconnected', () => { isMongoConnected = false; });
+mongoose.connection.on('disconnected', () => { isMongoConnected = false; mongoPromise = null; });
+
+// Serverless DB connection middleware
+app.use(async (req, res, next) => {
+  if (MONGODB_URI && mongoose.connection.readyState !== 1) {
+    try {
+      await connectToMongo();
+    } catch (_) {}
+  }
+  next();
+});
 
 // ─── MONGOOSE SCHEMAS ───
 
@@ -428,8 +457,8 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Only bind HTTP listener when not running inside Vercel serverless functions
-if (!process.env.VERCEL) {
+// Only bind HTTP listener when run directly (not imported as a serverless module or function)
+if (require.main === module && !process.env.VERCEL) {
   const PORT = 3000;
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Timetable Automation server running on http://0.0.0.0:${PORT}`);
